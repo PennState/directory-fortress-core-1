@@ -221,6 +221,8 @@ public class LdapConnectionProvider
         adminPool.setMaxActive( max );
         adminPool.setMinIdle( min );
         adminPool.setMaxIdle( -1 );
+        adminPool.setTestWhileIdle(true);
+        adminPool.setTimeBetweenEvictionRunsMillis(1000 * 60 * 30);
         //adminPool.setMaxWait( 0 );
 
         // Create the User pool
@@ -230,6 +232,8 @@ public class LdapConnectionProvider
         userPool.setMaxActive( max );
         userPool.setMinIdle( min );
         userPool.setMaxIdle( -1 );
+        userPool.setTestWhileIdle(true);
+        userPool.setTimeBetweenEvictionRunsMillis(1000 * 60 * 30);
 
         // This pool of access log connections is used by {@link org.apache.directory.fortress.AuditMgr}.
         // To enable, set {@code log.admin.user} && {@code log.admin.pw} inside fortress.properties file:
@@ -271,6 +275,8 @@ public class LdapConnectionProvider
             logPool.setWhenExhaustedAction( GenericObjectPool.WHEN_EXHAUSTED_GROW );
             logPool.setMaxActive( logmax );
             logPool.setMinIdle( logmin );
+            logPool.setTestWhileIdle(true);
+            logPool.setTimeBetweenEvictionRunsMillis(1000 * 60 * 30);
         }
     }
 
