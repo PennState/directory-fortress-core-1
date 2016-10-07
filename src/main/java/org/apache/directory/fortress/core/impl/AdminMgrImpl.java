@@ -275,6 +275,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
         List<Group> groups = groupP.roleGroups( outRole );
         for ( Group group : groups )
         {
+            group.setContextId( this.contextId );
             groupP.deassign( group, outRole.getDn() );
         }
         // search for all users assigned this role and deassign:
@@ -352,13 +353,14 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     @Override
     public RoleConstraint addRoleConstraint( UserRole uRole, RoleConstraint roleConstraint )
     	   	throws SecurityException
-    {
-        //TODO: need new arbac perm and/or add security check
+    {        
     	String methodName = "assignUser";
         assertContext( CLS_NM, methodName, uRole, GlobalErrIds.URLE_NULL );
+        AdminUtil.canAssign( uRole.getAdminSession(), new User( uRole.getUserId() ), new Role( uRole.getName() ), contextId );
+
+        // todo assert roleconstraint here
         
-        userP.assign( uRole, roleConstraint );
-        
+        userP.assign( uRole, roleConstraint );        
         return roleConstraint;
     }
 
@@ -368,11 +370,13 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     @Override
     public void removeRoleConstraint( UserRole uRole, RoleConstraint roleConstraint )
         	throws SecurityException
-    {
-        //TODO: need new arbac perm and/or add security check
+    {        
     	String methodName = "assignUser";
         assertContext( CLS_NM, methodName, uRole, GlobalErrIds.URLE_NULL );
+        AdminUtil.canDeassign( uRole.getAdminSession(), new User( uRole.getUserId() ), new Role( uRole.getName() ), contextId );
         
+        // todo assert roleconstraint here
+
         userP.deassign( uRole, roleConstraint );    	
     }
     
@@ -416,8 +420,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     {
         String methodName = "addPermissionAttributeSet";         
         assertContext( CLS_NM, methodName, permAttributeSet, GlobalErrIds.PERM_ATTRIBUTE_SET_NULL );
-        //TODO: setup ARBAC permissions
-        //setEntitySession( CLS_NM, methodName, permAttributeSet );    
+        setEntitySession( CLS_NM, methodName, permAttributeSet );    
         return permP.add( permAttributeSet );
     }          
     
@@ -429,7 +432,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     {
         String methodName = "deletePermissionAttributeSet";         
         assertContext( CLS_NM, methodName, permAttributeSet, GlobalErrIds.PERM_ATTRIBUTE_SET_NULL );
-        //TODO: verify with Shawn we don't need to set entity session here...        
+        setEntitySession( CLS_NM, methodName, permAttributeSet );   
         permP.delete( permAttributeSet );
     }
     
@@ -442,7 +445,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     {
     	String methodName = "addPermissionAttributeToSet";         
         assertContext( CLS_NM, methodName, permAttribute, GlobalErrIds.PERM_ATTRIBUTE_NULL );
-        //TODO: verify with Shawn we don't need to set entity session here...        
+        setEntitySession( CLS_NM, methodName, permAttribute );
         return permP.add( permAttribute, attributeSetName );    	
     }
     
@@ -455,7 +458,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     {
     	String methodName = "removePermissionAttributeFromSet";         
         assertContext( CLS_NM, methodName, permAttribute, GlobalErrIds.PERM_ATTRIBUTE_NULL );
-        //TODO: verify with Shawn we don't need to set entity session here...        
+        setEntitySession( CLS_NM, methodName, permAttribute );     
         permP.delete( permAttribute, attributeSetName );       	
     }
     
@@ -468,7 +471,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
     {
     	String methodName = "updatePermissionAttributeInSet"; 
     	assertContext( CLS_NM, methodName, permAttribute, GlobalErrIds.PERM_ATTRIBUTE_NULL );
-        //TODO: verify with Shawn we don't need to set entity session here...        
+    	setEntitySession( CLS_NM, methodName, permAttribute );     
         permP.update( permAttribute, attributeSetName, replaceValidValues );       	
     }
     
