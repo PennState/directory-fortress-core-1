@@ -17,13 +17,12 @@ public class DelReviewMgrSearchTest
     @Test
     public void testSearchAdminRole() throws SecurityException{
         DelReviewMgr delReviewMgr = DelReviewMgrFactory.createInstance();
-        
-        AdminRoleQueryBuilder rqb = new AdminRoleQueryBuilder();
-        rqb.addNameLikeFilter( "core" );
-        rqb.addPropertyEqualsFilter( "myprop", "myvalue" );
-        
+
+        AdminRoleQueryBuilder rqb = new AdminRoleQueryBuilder();        
+        rqb.addPropertyEqualsFilter( "myprop", "myvalue" ).addNameLikeFilter( "core" );
+
         List<AdminRole> adminRoles = delReviewMgr.findRoles( rqb );
         Assert.assertTrue( adminRoles.size() > 0 );
-        
+
     }
 }

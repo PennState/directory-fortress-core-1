@@ -10,7 +10,7 @@ import org.apache.directory.fortress.core.GlobalIds;
 import org.apache.directory.fortress.core.model.AdminRole;
 import org.apache.directory.ldap.client.api.search.FilterBuilder;
 
-public class AdminRoleQueryBuilder extends AbstractQueryBuilder
+public class AdminRoleQueryBuilder extends AbstractQueryBuilder<AdminRoleQueryBuilder>
 {
     private static final String ROLE_NM = "ftRoleName";
     
