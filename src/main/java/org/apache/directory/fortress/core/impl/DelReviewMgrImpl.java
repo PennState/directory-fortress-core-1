@@ -30,6 +30,7 @@ import org.apache.directory.fortress.core.model.OrgUnit;
 import org.apache.directory.fortress.core.model.Permission;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserAdminRole;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 /**
@@ -178,5 +179,14 @@ public class DelReviewMgrImpl extends Manageable implements DelReviewMgr, Serial
         checkAccess(CLS_NM, methodName);
         return permP.search( role, noInheritance );
 	}
+
+    @Override
+    public List<AdminRole> findRoles( AdminRoleQueryBuilder queryBuilder ) throws SecurityException
+    {
+        String methodName = "findRoles";
+        checkAccess(CLS_NM, methodName);
+        queryBuilder.setContextId(this.contextId);
+        return admRP.search(queryBuilder);
+    }
 }
 

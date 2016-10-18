@@ -27,6 +27,7 @@ import org.apache.directory.fortress.core.model.OrgUnit;
 import org.apache.directory.fortress.core.model.Permission;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserAdminRole;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 
 
 /**
@@ -198,5 +199,9 @@ public interface DelReviewMgr extends Manageable
      * @throws SecurityException In the event system error occurs.
      */
     List<Permission> rolePermissions( AdminRole role, boolean noInheritance )
+        throws SecurityException;
+    
+    //TODO: add documentation
+    List<AdminRole> findRoles( AdminRoleQueryBuilder queryBuilder )
         throws SecurityException;
 }

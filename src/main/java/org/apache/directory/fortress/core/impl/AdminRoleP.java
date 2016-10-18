@@ -35,6 +35,7 @@ import org.apache.directory.fortress.core.util.ConstraintValidator;
 import org.apache.directory.fortress.core.model.Graphable;
 import org.apache.directory.fortress.core.model.OrgUnit;
 import org.apache.directory.fortress.core.model.UserAdminRole;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -413,5 +414,12 @@ final class AdminRoleP
             inOe.setContextId( contextId );
             op.read( inOe );
         }
+    }
+    
+    //TODO: add documentation
+    List<AdminRole> search( AdminRoleQueryBuilder queryBuilder )
+        throws SecurityException
+    {
+        return rDao.findRoles( queryBuilder );
     }
 }

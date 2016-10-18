@@ -33,6 +33,7 @@ import org.apache.directory.fortress.core.model.OrgUnit;
 import org.apache.directory.fortress.core.model.Permission;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserAdminRole;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 /**
@@ -262,4 +263,12 @@ public class DelReviewMgrRestImpl extends Manageable implements DelReviewMgr
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+
+    @Override
+    public List<AdminRole> findRoles( AdminRoleQueryBuilder queryBuilder ) throws SecurityException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

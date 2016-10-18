@@ -49,6 +49,7 @@ import org.apache.directory.fortress.core.model.ConstraintUtil;
 import org.apache.directory.fortress.core.model.Graphable;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.Role;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 import org.apache.directory.ldap.client.api.LdapConnection;
 
 
@@ -550,6 +551,43 @@ final class AdminRoleDAO extends LdapDataProvider
         return roleList;
     }
 
+    //TODO: add documentation
+    List<AdminRole> findRoles( AdminRoleQueryBuilder queryBuilder ) throws FinderException
+    {
+        List<AdminRole> roleList = new ArrayList<AdminRole>();
+        LdapConnection ld = null;
+        String roleRoot = getRootDn( queryBuilder.getContextId(), GlobalIds.ADMIN_ROLE_ROOT );
+        String filter;
+
+        try
+        {
+            ld = getAdminConnection();
+            SearchCursor searchResults = search( ld, roleRoot,
+                SearchScope.ONELEVEL, queryBuilder.buildFilterString(), ROLE_ATRS, false, GlobalIds.BATCH_SIZE );
+            long sequence = 0;
+
+            while ( searchResults.next() )
+            {
+                roleList.add( unloadLdapEntry( searchResults.getEntry(), sequence++, queryBuilder.getContextId() ) );
+            }
+        }
+        catch ( LdapException e )
+        {
+            String error = "findRoles queryBuilder caught LdapException=" + e.getMessage();
+            throw new FinderException( GlobalErrIds.ARLE_SEARCH_FAILED, error, e );
+        }
+        catch ( CursorException e )
+        {
+            String error = "findRoles queryBuilder caught CursorException=" + e.getMessage();
+            throw new FinderException( GlobalErrIds.ARLE_SEARCH_FAILED, error, e );
+        }
+        finally
+        {
+            closeAdminConnection( ld );
+        }
+
+        return roleList;
+    }
 
     /**
      * @param userDn
