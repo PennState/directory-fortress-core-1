@@ -63,6 +63,7 @@ final class AdminRoleP
     private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
     private AdminRoleDAO rDao = new AdminRoleDAO();
     private OrgUnitP op = new OrgUnitP();
+    private QueryBuilderDAO qbDao = new QueryBuilderDAO();
     private static final ConstraintValidator constraintValidator = VUtil.getConstraintValidator();
 
     /**
@@ -420,6 +421,6 @@ final class AdminRoleP
     List<AdminRole> search( AdminRoleQueryBuilder queryBuilder )
         throws SecurityException
     {
-        return rDao.findRoles( queryBuilder );
+        return qbDao.runQuery( queryBuilder, rDao );
     }
 }

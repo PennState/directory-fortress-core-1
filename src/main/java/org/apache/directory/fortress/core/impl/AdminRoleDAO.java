@@ -108,7 +108,7 @@ import org.apache.directory.ldap.client.api.LdapConnection;
  *
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  */
-final class AdminRoleDAO extends LdapDataProvider
+final class AdminRoleDAO extends LdapDataProvider implements QueryBuilderProvider<AdminRole>
 {
     private static final String ROLE_OCCUPANT = "roleOccupant";
     private static final String ROLE_OSP = "ftOSP";
@@ -551,44 +551,6 @@ final class AdminRoleDAO extends LdapDataProvider
         return roleList;
     }
 
-    //TODO: add documentation
-    List<AdminRole> findRoles( AdminRoleQueryBuilder queryBuilder ) throws FinderException
-    {
-        List<AdminRole> roleList = new ArrayList<AdminRole>();
-        LdapConnection ld = null;
-        String roleRoot = getRootDn( queryBuilder.getContextId(), GlobalIds.ADMIN_ROLE_ROOT );
-        String filter;
-
-        try
-        {
-            ld = getAdminConnection();
-            SearchCursor searchResults = search( ld, roleRoot,
-                SearchScope.ONELEVEL, queryBuilder.buildFilterString(), ROLE_ATRS, false, GlobalIds.BATCH_SIZE );
-            long sequence = 0;
-
-            while ( searchResults.next() )
-            {
-                roleList.add( unloadLdapEntry( searchResults.getEntry(), sequence++, queryBuilder.getContextId() ) );
-            }
-        }
-        catch ( LdapException e )
-        {
-            String error = "findRoles queryBuilder caught LdapException=" + e.getMessage();
-            throw new FinderException( GlobalErrIds.ARLE_SEARCH_FAILED, error, e );
-        }
-        catch ( CursorException e )
-        {
-            String error = "findRoles queryBuilder caught CursorException=" + e.getMessage();
-            throw new FinderException( GlobalErrIds.ARLE_SEARCH_FAILED, error, e );
-        }
-        finally
-        {
-            closeAdminConnection( ld );
-        }
-
-        return roleList;
-    }
-
     /**
      * @param userDn
      * @return
@@ -706,7 +668,8 @@ final class AdminRoleDAO extends LdapDataProvider
      * @throws LdapInvalidAttributeValueException 
      * @throws LdapException
      */
-    private AdminRole unloadLdapEntry( Entry le, long sequence, String contextId )
+    @Override
+    public AdminRole unloadLdapEntry( Entry le, long sequence, String contextId )
         throws LdapInvalidAttributeValueException
     {
         AdminRole entity = new ObjectFactory().createAdminRole();
@@ -729,5 +692,19 @@ final class AdminRoleDAO extends LdapDataProvider
     {
         return SchemaConstants.CN_AT + "=" + adminRole.getName() + ","
             + getRootDn( adminRole.getContextId(), GlobalIds.ADMIN_ROLE_ROOT );
+    }
+
+
+    @Override
+    public String getRootDnString()
+    {
+        return GlobalIds.ADMIN_ROLE_ROOT;
+    }
+
+
+    @Override
+    public String[] getObjectReturnAttributes()
+    {
+        return ROLE_ATRS;
     }
 }
