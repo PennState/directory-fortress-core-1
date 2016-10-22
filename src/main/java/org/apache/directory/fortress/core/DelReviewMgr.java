@@ -201,7 +201,13 @@ public interface DelReviewMgr extends Manageable
     List<Permission> rolePermissions( AdminRole role, boolean noInheritance )
         throws SecurityException;
     
-    //TODO: add documentation
+    /**
+     * This function allows performing a search of admin roles using the query builder.
+     *
+     * @param queryBuilder
+     * @return List of AdminRole that match the query builder criteria
+     * @throws SecurityException In the event system error occurs.
+     */
     List<AdminRole> findRoles( AdminRoleQueryBuilder queryBuilder )
         throws SecurityException;
 }

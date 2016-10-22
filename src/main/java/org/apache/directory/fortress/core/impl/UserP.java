@@ -43,6 +43,7 @@ import org.apache.directory.fortress.core.model.Session;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserAdminRole;
 import org.apache.directory.fortress.core.model.UserRole;
+import org.apache.directory.fortress.core.search.UserQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 import org.slf4j.Logger;
@@ -74,6 +75,7 @@ final class UserP
     private PolicyP policyP = new PolicyP();
     private AdminRoleP admRoleP = new AdminRoleP();
     private OrgUnitP orgUnitP = new OrgUnitP();
+    private QueryBuilderDAO qbDao = new QueryBuilderDAO();
 
     /**
      * Takes a User entity that contains full or partial userId OR a full internal userId for search.
@@ -943,5 +945,17 @@ final class UserP
         }
         
         return matchingConstraints;
+    }
+    
+    /**
+     * Finds User using the query builder filter
+     *
+     * @param queryBuilder
+     * @return
+     * @throws SecurityException
+     */
+    List<User> search( UserQueryBuilder queryBuilder ) throws SecurityException
+    {
+        return qbDao.runQuery( queryBuilder, uDao );
     }
 }

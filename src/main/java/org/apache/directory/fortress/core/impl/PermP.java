@@ -39,6 +39,8 @@ import org.apache.directory.fortress.core.model.PermissionAttributeSet;
 import org.apache.directory.fortress.core.model.Role;
 import org.apache.directory.fortress.core.model.Session;
 import org.apache.directory.fortress.core.model.User;
+import org.apache.directory.fortress.core.search.PermissionObjectQueryBuilder;
+import org.apache.directory.fortress.core.search.PermissionOperationQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 
@@ -67,7 +69,9 @@ final class PermP
      */
     private PermDAO pDao = new PermDAO();
     private OrgUnitP orgUnitP = new OrgUnitP();
-
+    private QueryBuilderDAO qbDao = new QueryBuilderDAO();
+    private PermObjDAO pobjDao = new PermObjDAO();
+    private PermOpDAO popDao = new PermOpDAO();
 
     /**
      * This function returns a Boolean value meaning whether the subject of a given session is
@@ -774,5 +778,29 @@ final class PermP
         if( StringUtils.isNotEmpty(pa.getDescription()) ){
             VUtil.description( pa.getDescription() );
         }        
+    }
+    
+    /**
+     * Finds Permissions using the query builder filter
+     *
+     * @param queryBuilder
+     * @return
+     * @throws SecurityException
+     */
+    List<Permission> search( PermissionOperationQueryBuilder queryBuilder ) throws SecurityException
+    {
+        return qbDao.runQuery( queryBuilder, popDao );
+    }
+    
+    /**
+     * Finds Permission Objects using the query builder filter
+     *
+     * @param queryBuilder
+     * @return
+     * @throws SecurityException
+     */
+    List<PermObj> search( PermissionObjectQueryBuilder queryBuilder ) throws SecurityException
+    {
+        return qbDao.runQuery( queryBuilder, pobjDao );
     }
 }

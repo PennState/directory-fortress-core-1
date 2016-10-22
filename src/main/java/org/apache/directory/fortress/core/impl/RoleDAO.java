@@ -49,6 +49,7 @@ import org.apache.directory.fortress.core.model.Graphable;
 import org.apache.directory.fortress.core.model.Group;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.Role;
+import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.ldap.client.api.LdapConnection;
 
 
@@ -97,7 +98,7 @@ import org.apache.directory.ldap.client.api.LdapConnection;
  *
  * @author Kevin McKinney
  */
-final class RoleDAO extends LdapDataProvider
+final class RoleDAO extends LdapDataProvider implements QueryBuilderProvider<Role>
 {
     /*
       *  *************************************************************************
@@ -711,7 +712,8 @@ final class RoleDAO extends LdapDataProvider
      * @throws LdapInvalidAttributeValueException 
      * @throws LdapException
      */
-    private Role unloadLdapEntry( Entry le, long sequence, String contextId ) throws LdapInvalidAttributeValueException
+    @Override
+    public Role unloadLdapEntry( Entry le, long sequence, String contextId ) throws LdapInvalidAttributeValueException
     {
         Role entity = new ObjectFactory().createRole();
         entity.setSequenceId( sequence );
@@ -731,5 +733,19 @@ final class RoleDAO extends LdapDataProvider
     private String getDn( String name, String contextId )
     {
         return SchemaConstants.CN_AT + "=" + name + "," + getRootDn( contextId, GlobalIds.ROLE_ROOT );
+    }
+
+
+    @Override
+    public String getRootDnString()
+    {
+        return GlobalIds.ROLE_ROOT;
+    }
+
+
+    @Override
+    public String[] getObjectReturnAttributes()
+    {
+        return ROLE_ATRS;
     }
 }

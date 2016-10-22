@@ -417,7 +417,13 @@ final class AdminRoleP
         }
     }
     
-    //TODO: add documentation
+    /**
+     * Finds AdminRole using the query builder filter
+     *
+     * @param queryBuilder
+     * @return
+     * @throws SecurityException
+     */
     List<AdminRole> search( AdminRoleQueryBuilder queryBuilder )
         throws SecurityException
     {

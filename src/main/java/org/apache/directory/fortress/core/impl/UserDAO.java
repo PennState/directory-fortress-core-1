@@ -149,7 +149,7 @@ import org.slf4j.LoggerFactory;
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  * @created August 30, 2009
  */
-final class UserDAO extends LdapDataProvider
+final class UserDAO extends LdapDataProvider implements QueryBuilderProvider<User>
 {
     /*
       *  *************************************************************************
@@ -1901,7 +1901,8 @@ final class UserDAO extends LdapDataProvider
      * @return
      * @throws LdapInvalidAttributeValueException
      */
-    private User unloadLdapEntry( Entry entry, long sequence, String contextId )
+    @Override
+    public User unloadLdapEntry( Entry entry, long sequence, String contextId )
         throws LdapInvalidAttributeValueException
     {
         User entity = new ObjectFactory().createUser();
@@ -2515,5 +2516,17 @@ final class UserDAO extends LdapDataProvider
                     GlobalIds.CONSTRAINT,
                     GlobalIds.PROPS };
         }
+    }
+
+    @Override
+    public String getRootDnString()
+    {
+        return GlobalIds.USER_ROOT;
+    }
+
+    @Override
+    public String[] getObjectReturnAttributes()
+    {
+        return defaultAtrs;
     }
 }

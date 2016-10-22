@@ -154,7 +154,7 @@ import org.apache.directory.ldap.client.api.LdapConnection;
  * 
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  */
-final class PermDAO extends LdapDataProvider
+class PermDAO extends LdapDataProvider
 {
     /*
       *  *************************************************************************
@@ -188,7 +188,7 @@ final class PermDAO extends LdapDataProvider
     private static final String ROLES = "ftRoles";
     private static final String USERS = "ftUsers";
     private static final String PERMISSION_ATTRIBUTE_SET = "ftPASet";
-    private static final String[] PERMISSION_OP_ATRS =
+    protected static final String[] PERMISSION_OP_ATRS =
         {
             GlobalIds.FT_IID,
             PERM_NAME,
@@ -204,7 +204,7 @@ final class PermDAO extends LdapDataProvider
             PERMISSION_ATTRIBUTE_SET
     };
 
-    private static final String[] PERMISION_OBJ_ATRS =
+    protected static final String[] PERMISION_OBJ_ATRS =
         {
             GlobalIds.FT_IID, GlobalIds.POBJ_NAME, SchemaConstants.DESCRIPTION_AT, SchemaConstants.OU_AT, GlobalIds.TYPE,
             GlobalIds.PROPS
@@ -1406,7 +1406,7 @@ final class PermDAO extends LdapDataProvider
      * @throws LdapInvalidAttributeValueException 
      * @throws LdapException
      */
-    private Permission unloadPopLdapEntry( Entry le, long sequence, boolean isAdmin )
+    protected Permission unloadPopLdapEntry( Entry le, long sequence, boolean isAdmin )
         throws LdapInvalidAttributeValueException
     {
         Permission entity = new ObjectFactory().createPermission();
@@ -1439,7 +1439,7 @@ final class PermDAO extends LdapDataProvider
      * @throws LdapInvalidAttributeValueException 
      * @throws LdapException
      */
-    private PermObj unloadPobjLdapEntry( Entry le, long sequence, boolean isAdmin )
+    protected PermObj unloadPobjLdapEntry( Entry le, long sequence, boolean isAdmin )
         throws LdapInvalidAttributeValueException
     {
         PermObj entity = new ObjectFactory().createPermObj();

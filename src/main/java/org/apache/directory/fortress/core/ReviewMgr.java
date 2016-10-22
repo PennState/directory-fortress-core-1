@@ -23,6 +23,7 @@ package org.apache.directory.fortress.core;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.directory.fortress.core.model.AdminRole;
 import org.apache.directory.fortress.core.model.OrgUnit;
 import org.apache.directory.fortress.core.model.PermObj;
 import org.apache.directory.fortress.core.model.Permission;
@@ -32,6 +33,11 @@ import org.apache.directory.fortress.core.model.RoleConstraint;
 import org.apache.directory.fortress.core.model.SDSet;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserRole;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
+import org.apache.directory.fortress.core.search.PermissionObjectQueryBuilder;
+import org.apache.directory.fortress.core.search.PermissionOperationQueryBuilder;
+import org.apache.directory.fortress.core.search.RoleQueryBuilder;
+import org.apache.directory.fortress.core.search.UserQueryBuilder;
 
 
 /**
@@ -739,5 +745,45 @@ public interface ReviewMgr extends Manageable
      * @throws SecurityException in the event of data or system error.
      */
     List<RoleConstraint>  findRoleConstraints(User user, Permission permission, RoleConstraint.RCType rcType)
+        throws SecurityException;
+    
+    /**
+     * This function allows performing a search of user using the query builder.
+     *
+     * @param queryBuilder
+     * @return List of User that match the query builder criteria
+     * @throws SecurityException In the event system error occurs.
+     */
+    List<User> findUsers( UserQueryBuilder queryBuilder )
+        throws SecurityException;
+    
+    /**
+     * This function allows performing a search of permission operations using the query builder.
+     *
+     * @param queryBuilder
+     * @return List of Permission that match the query builder criteria
+     * @throws SecurityException In the event system error occurs.
+     */
+    List<Permission> findPermissions( PermissionOperationQueryBuilder queryBuilder )
+        throws SecurityException;
+    
+    /**
+     * This function allows performing a search of permission objects using the query builder.
+     *
+     * @param queryBuilder
+     * @return List of PermObj that match the query builder criteria
+     * @throws SecurityException In the event system error occurs.
+     */
+    List<PermObj> findPermObjs( PermissionObjectQueryBuilder queryBuilder )
+        throws SecurityException;
+    
+    /**
+     * This function allows performing a search of roles using the query builder.
+     *
+     * @param queryBuilder
+     * @return List of Role that match the query builder criteria
+     * @throws SecurityException In the event system error occurs.
+     */
+    List<Role> findRoles( RoleQueryBuilder queryBuilder )
         throws SecurityException;
 }

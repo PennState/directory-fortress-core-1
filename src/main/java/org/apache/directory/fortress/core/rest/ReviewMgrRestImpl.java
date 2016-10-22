@@ -39,6 +39,10 @@ import org.apache.directory.fortress.core.model.RoleConstraint;
 import org.apache.directory.fortress.core.model.SDSet;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserRole;
+import org.apache.directory.fortress.core.search.PermissionObjectQueryBuilder;
+import org.apache.directory.fortress.core.search.PermissionOperationQueryBuilder;
+import org.apache.directory.fortress.core.search.RoleQueryBuilder;
+import org.apache.directory.fortress.core.search.UserQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 /**
@@ -1345,4 +1349,38 @@ public class ReviewMgrRestImpl extends Manageable implements ReviewMgr
         }
         return retConstraints;
 	}
+
+
+    @Override
+    public List<User> findUsers( UserQueryBuilder queryBuilder ) throws SecurityException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public List<Permission> findPermissions( PermissionOperationQueryBuilder queryBuilder ) throws SecurityException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public List<PermObj> findPermObjs( PermissionObjectQueryBuilder queryBuilder ) throws SecurityException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
+    @Override
+    public List<Role> findRoles( RoleQueryBuilder queryBuilder ) throws SecurityException
+    {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+
 }

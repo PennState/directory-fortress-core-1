@@ -40,6 +40,10 @@ import org.apache.directory.fortress.core.model.RoleConstraint;
 import org.apache.directory.fortress.core.model.SDSet;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserRole;
+import org.apache.directory.fortress.core.search.PermissionObjectQueryBuilder;
+import org.apache.directory.fortress.core.search.PermissionOperationQueryBuilder;
+import org.apache.directory.fortress.core.search.RoleQueryBuilder;
+import org.apache.directory.fortress.core.search.UserQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 /**
@@ -737,6 +741,54 @@ public class ReviewMgrImpl extends Manageable implements ReviewMgr, Serializable
 
         //find role constraints for the user and the permission's pa set
         return userP.findRoleConstraints(authorizedRoles, user, rcType, pe.getPaSets());                
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<User> findUsers( UserQueryBuilder queryBuilder ) throws SecurityException
+    {
+        String methodName = "findUsers";
+        checkAccess(CLS_NM, methodName);
+        queryBuilder.setContextId( this.contextId );
+        return userP.search( queryBuilder );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Permission> findPermissions( PermissionOperationQueryBuilder queryBuilder ) throws SecurityException
+    {
+        String methodName = "findPermissions";
+        checkAccess(CLS_NM, methodName);
+        queryBuilder.setContextId( this.contextId );
+        return permP.search( queryBuilder );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<PermObj> findPermObjs( PermissionObjectQueryBuilder queryBuilder ) throws SecurityException
+    {
+        String methodName = "findPermObjs";
+        checkAccess(CLS_NM, methodName);
+        queryBuilder.setContextId( this.contextId );
+        return permP.search( queryBuilder );
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<Role> findRoles( RoleQueryBuilder queryBuilder ) throws SecurityException
+    {
+        String methodName = "findRoles";
+        checkAccess( CLS_NM, methodName );
+        queryBuilder.setContextId( this.contextId );
+        return roleP.search( queryBuilder );
     }
 
 }

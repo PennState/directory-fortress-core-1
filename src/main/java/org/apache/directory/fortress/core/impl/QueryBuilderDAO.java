@@ -13,6 +13,7 @@ import org.apache.directory.fortress.core.GlobalErrIds;
 import org.apache.directory.fortress.core.GlobalIds;
 import org.apache.directory.fortress.core.ldap.LdapDataProvider;
 import org.apache.directory.fortress.core.model.AdminRole;
+import org.apache.directory.fortress.core.search.AbstractQueryBuilder;
 import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 import org.apache.directory.ldap.client.api.LdapConnection;
 
@@ -24,7 +25,7 @@ import org.apache.directory.ldap.client.api.LdapConnection;
 public class QueryBuilderDAO extends LdapDataProvider
 {
     
-    <T> List<T> runQuery( AdminRoleQueryBuilder queryBuilder, QueryBuilderProvider<T> provider ) throws FinderException
+    <T> List<T> runQuery( AbstractQueryBuilder queryBuilder, QueryBuilderProvider<T> provider ) throws FinderException
     {
         List<T> resultList = new ArrayList<T>();
         LdapConnection ld = null;

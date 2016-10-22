@@ -33,7 +33,10 @@ import org.apache.directory.fortress.core.util.ConstraintValidator;
 import org.apache.directory.fortress.core.model.Graphable;
 import org.apache.directory.fortress.core.model.Group;
 import org.apache.directory.fortress.core.model.Role;
+import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserRole;
+import org.apache.directory.fortress.core.search.RoleQueryBuilder;
+import org.apache.directory.fortress.core.search.UserQueryBuilder;
 import org.apache.directory.fortress.core.util.VUtil;
 
 
@@ -58,6 +61,7 @@ import org.apache.directory.fortress.core.util.VUtil;
 final class RoleP
 {
     private RoleDAO rDao = new RoleDAO();
+    private QueryBuilderDAO qbDao = new QueryBuilderDAO();
     private static final ConstraintValidator constraintValidator = VUtil.getConstraintValidator();
 
 
@@ -322,5 +326,17 @@ final class RoleP
         {
             constraintValidator.endDate( entity.getEndLockDate() );
         }
+    }
+    
+    /**
+     * Finds Role using the query builder filter
+     *
+     * @param queryBuilder
+     * @return
+     * @throws SecurityException
+     */
+    List<Role> search( RoleQueryBuilder queryBuilder ) throws SecurityException
+    {
+        return qbDao.runQuery( queryBuilder, rDao );
     }
 }
