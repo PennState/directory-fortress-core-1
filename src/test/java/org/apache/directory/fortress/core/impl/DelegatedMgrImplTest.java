@@ -38,6 +38,7 @@ import org.apache.directory.fortress.core.model.Role;
 import org.apache.directory.fortress.core.model.Session;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserAdminRole;
+import org.apache.directory.fortress.core.search.AdminRoleQueryBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -1307,13 +1308,23 @@ public class DelegatedMgrImplTest extends TestCase
     {
         searchAdminRoles( "SRCH-ADMRLS TR1",
             TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR1[0] ) ),
-            AdminRoleTestData.AROLES_TR1 );
+            AdminRoleTestData.AROLES_TR1, false );
         searchAdminRoles( "SRCH-ADMRLS TR2",
             TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR2[0] ) ),
-            AdminRoleTestData.AROLES_TR2 );
+            AdminRoleTestData.AROLES_TR2, false );
         searchAdminRoles( "SRCH-ADMRLS TR3",
             TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR3_UPD[0] ) ),
-            AdminRoleTestData.AROLES_TR3_UPD );
+            AdminRoleTestData.AROLES_TR3_UPD, false );
+        
+        searchAdminRoles( "SRCH-ADMRLS TR1 QB",
+            TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR1[0] ) ),
+            AdminRoleTestData.AROLES_TR1, true );
+        searchAdminRoles( "SRCH-ADMRLS TR2 QB",
+            TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR2[0] ) ),
+            AdminRoleTestData.AROLES_TR2, true );
+        searchAdminRoles( "SRCH-ADMRLS TR3 QB",
+            TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR3_UPD[0] ) ),
+            AdminRoleTestData.AROLES_TR3_UPD, true );
     }
 
 
@@ -1323,13 +1334,18 @@ public class DelegatedMgrImplTest extends TestCase
      * @param srchValue
      * @param rArray
      */
-    public static void searchAdminRoles( String msg, String srchValue, String[][] rArray )
+    public static void searchAdminRoles( String msg, String srchValue, String[][] rArray, boolean queryBuilder )
     {
         LogUtil.logIt( msg );
         try
-        {
-            DelReviewMgr dReviewMgr = getManagedDelegatedReviewMgr();
-            List<AdminRole> roles = dReviewMgr.findRoles( srchValue );
+        {            
+            List<AdminRole> roles = null;
+            if( !queryBuilder ){
+                roles = findAdminRoles( srchValue );
+            }
+            else{
+                roles = findAdminRolesQueryBuilder( srchValue );
+            }
             assertNotNull( roles );
             assertTrue( CLS_NM + "searchAdminRoles list size check", rArray.length == roles.size() );
             for ( String[] rle : rArray )
@@ -1358,7 +1374,20 @@ public class DelegatedMgrImplTest extends TestCase
             fail( ex.getMessage() );
         }
     }
+    
+    private static List<AdminRole> findAdminRoles( String srchValue ) throws SecurityException{
+        DelReviewMgr dReviewMgr = getManagedDelegatedReviewMgr();
+        return dReviewMgr.findRoles( srchValue );
+    }
 
+    private static List<AdminRole> findAdminRolesQueryBuilder( String srchValue ) throws SecurityException{
+        DelReviewMgr dReviewMgr = getManagedDelegatedReviewMgr();
+        
+        AdminRoleQueryBuilder qb = new AdminRoleQueryBuilder();
+        qb.addNameStartsWithFilter( srchValue );
+        
+        return dReviewMgr.findRoles( qb );
+    }
 
     public void testAddOrgUnitDescendant()
     {

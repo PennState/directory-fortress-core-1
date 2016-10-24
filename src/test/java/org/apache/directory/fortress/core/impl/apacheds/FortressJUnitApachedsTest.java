@@ -927,13 +927,13 @@ public class FortressJUnitApachedsTest extends AbstractLdapTestUnit
         // The test itself
         DelegatedMgrImplTest.searchAdminRoles( "SRCH-ADMRLS TR1",
             TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR1[0] ) ),
-            AdminRoleTestData.AROLES_TR1 );
+            AdminRoleTestData.AROLES_TR1, false );
         DelegatedMgrImplTest.searchAdminRoles( "SRCH-ADMRLS TR2",
             TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR2[0] ) ),
-            AdminRoleTestData.AROLES_TR2 );
+            AdminRoleTestData.AROLES_TR2, false );
         DelegatedMgrImplTest.searchAdminRoles( "SRCH-ADMRLS TR3",
             TestUtils.getSrchValue( RoleTestData.getName( AdminRoleTestData.AROLES_TR3_UPD[0] ) ),
-            AdminRoleTestData.AROLES_TR3_UPD );
+            AdminRoleTestData.AROLES_TR3_UPD, false );
     }
 
 
