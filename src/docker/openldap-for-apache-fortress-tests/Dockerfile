@@ -17,30 +17,29 @@
 #   under the License.
 #
 
-FROM centos:6
+FROM debian:8
 
-# Prerequisites: Fortress Quickstart downloaded from https://symas.com/downloads/
-ADD fortressBuilder-Redhat-Silver-x86-64-1.0-RC39.zip /root/fortress/
+# Install openldap
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update
+RUN apt-get install -y -qq slapd ldap-utils
 
-WORKDIR /root/fortress
+# Add fortress schema and slapd config
+ADD ldap/schema/fortress.schema /etc/ldap/schema/
+ADD ldap/schema/rbac.schema /etc/ldap/schema/
+ADD src/docker/openldap-for-apache-fortress-tests/slapd.conf /etc/ldap/
 
-RUN \
-    yum -y -q install java-1.7.0-openjdk-devel unzip && \
-    # Fortress Quickstart README Section I
-    unzip fortressBuilder-Redhat-Silver-x86-64-1.0-RC39.zip && \
-    chmod a+x -Rf * && \
-    # Fortress Quickstart README Section II
-    sed -i 's/export JAVA_HOME=.*/export JAVA_HOME=\/usr\/lib\/jvm\/java-1.7.0/' b.sh && \
-    ./b.sh dist && \
-    # Fortress Quickstart README Section III
-    ./b.sh init-slapd && \
-    # Cleanup: only the configured OpenLDAP server is required
-    rm -rf /root/fortress && \
-    rm -rf /root/.ivy2
-    
-WORKDIR /root
+# Create database directories
+RUN mkdir -p /var/lib/ldap/dflt
+RUN mkdir -p /var/lib/ldap/hist
+RUN chown -R openldap:openldap /var/lib/ldap
+
+# Delete slapd-config which was created during installation
+# and create new one by converting from old slapd.conf
+RUN rm -rf /etc/ldap/slapd.d/*
+RUN slaptest -u -f /etc/ldap/slapd.conf -F /etc/ldap/slapd.d
 
 EXPOSE 389
 
-CMD ["/opt/symas/lib64/slapd", "-d", "32768", "-u", "root", "-g", "root"]
+CMD ["/usr/sbin/slapd", "-d", "32768", "-u", "root", "-g", "root"]
 

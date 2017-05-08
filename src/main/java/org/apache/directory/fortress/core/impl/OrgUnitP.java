@@ -58,7 +58,7 @@ import org.slf4j.LoggerFactory;
 
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  */
-public final class OrgUnitP
+final class OrgUnitP
 {
     // init the logger:
     private static final String CLS_NM = OrgUnitP.class.getName();
@@ -70,15 +70,13 @@ public final class OrgUnitP
     private static Cache ouCache;
 
     // DAO class for OU data sets must be initializer before the other statics:
-    private OrgUnitDAO oDao;
+    private OrgUnitDAO oDao = new OrgUnitDAO();
     private static final String USER_OUS = "user.ous";
     private static final String PERM_OUS = "perm.ous";
     private static final String FORTRESS_OUS = "fortress.ous";
 
-    public void init()
+    private void init()
     {
-        oDao = new OrgUnitDAO();
-    	
         CacheMgr cacheMgr = CacheMgr.getInstance();
         OrgUnitP.ouCache = cacheMgr.getCache( FORTRESS_OUS );
     }
@@ -444,7 +442,7 @@ public final class OrgUnitP
      * Build a key that is composed of the OU type ({@link #USER_OUS} or {@link #PERM_OUS}) and the contextId which is the id of tenant.
      *
      * @param type either {@link #USER_OUS} or {@link #PERM_OUS}.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return key mapping to this tenant's cache entry.
      */
     private static String getKey( String type, String contextId )

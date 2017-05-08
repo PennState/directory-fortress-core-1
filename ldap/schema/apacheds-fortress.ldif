@@ -18,7 +18,7 @@
 #   under the License.
 #
 
-# SCHEMA "FORTRESS"
+# SCHEMA "FORTRESS" v2.0.0-RC2
 dn: cn=fortress, ou=schema
 objectclass: metaSchema
 objectclass: top
@@ -617,6 +617,7 @@ m-supObjectClass: groupOfNames
 m-must: configProtocol
 m-must: ftType
 m-may: configParameter
+m-may: ftProps
 
 dn: m-oid=1.3.6.1.4.1.18060.17.2.9, ou=objectclasses, cn=fortress, ou=schema
 objectclass: metaObjectClass

@@ -29,7 +29,7 @@ import org.apache.directory.fortress.core.GlobalErrIds;
 import org.apache.directory.fortress.core.GlobalIds;
 import org.apache.directory.fortress.core.SecurityException;
 import org.apache.directory.fortress.core.ValidationException;
-import org.apache.directory.fortress.core.model.ConstraintValidator;
+import org.apache.directory.fortress.core.util.ConstraintValidator;
 import org.apache.directory.fortress.core.model.Graphable;
 import org.apache.directory.fortress.core.model.Group;
 import org.apache.directory.fortress.core.model.Role;
@@ -57,17 +57,8 @@ import org.apache.directory.fortress.core.util.VUtil;
  */
 final class RoleP
 {
-    private RoleDAO rDao;
+    private RoleDAO rDao = new RoleDAO();
     private static final ConstraintValidator constraintValidator = VUtil.getConstraintValidator();
-
-
-    /**
-     * Package private
-     */
-    RoleP()
-    {
-    	rDao = new RoleDAO();
-    }
 
 
     /**
@@ -135,7 +126,7 @@ final class RoleP
     /**
      * Return all Roles that have a parent assignment.  This used for hierarchical processing.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return List of type Role containing {@link Role#name} and {@link Role#parents} populated.
      * @throws SecurityException in the event of DAO search error.
      */
@@ -224,7 +215,7 @@ final class RoleP
      *
      * @param uRoles contains a collection of UserRole being targeted for assignment.
      * @param userDn contains the userId targeted for addition.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @throws SecurityException in the event of DAO search error.
      */
     void addOccupant( List<UserRole> uRoles, String userDn, String contextId ) throws SecurityException
@@ -246,7 +237,7 @@ final class RoleP
      * when the User is being deleted.
      *
      * @param userDn contains the userId targeted for attribute removal.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @throws SecurityException in the event of DAO search error.
      */
     void removeOccupant( String userDn, String contextId ) throws SecurityException

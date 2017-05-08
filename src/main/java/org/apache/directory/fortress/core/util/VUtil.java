@@ -25,7 +25,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.ListIterator;
 import java.util.Properties;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -34,16 +33,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.directory.fortress.core.CfgException;
 import org.apache.directory.fortress.core.GlobalErrIds;
 import org.apache.directory.fortress.core.GlobalIds;
-import org.apache.directory.fortress.core.ReviewMgr;
-import org.apache.directory.fortress.core.ReviewMgrFactory;
 import org.apache.directory.fortress.core.SecurityException;
 import org.apache.directory.fortress.core.ValidationException;
 import org.apache.directory.fortress.core.model.Constraint;
-import org.apache.directory.fortress.core.model.ConstraintValidator;
 import org.apache.directory.fortress.core.model.Group;
 import org.apache.directory.fortress.core.model.ObjectFactory;
-import org.apache.directory.fortress.core.model.PermissionAttributeSet;
-import org.apache.directory.fortress.core.model.PropUtil;
 import org.apache.directory.fortress.core.model.Session;
 import org.apache.directory.fortress.core.model.UserRole;
 import org.apache.directory.fortress.core.model.Warning;
@@ -61,9 +55,9 @@ import org.slf4j.LoggerFactory;
 public final class VUtil implements ConstraintValidator
 {
     /**
-     * enum specifies what type of constraint is being targeted - User or Rold.
+     * enum specifies what type of constraint is being targeted - User or Role.
      */
-    public static enum ConstraintType
+    public enum ConstraintType
     {
         /**
          * Specifies {@link org.apache.directory.fortress.core.model.User}
@@ -79,9 +73,6 @@ public final class VUtil implements ConstraintValidator
     private static final org.slf4j.Logger LOG = LoggerFactory.getLogger( CLS_NM );
     private static int maximumFieldLen = 130;
     private static final String VALIDATE_LENGTH = "field.length";
-    private static List<Validator> validators;
-    private String DSDVALIDATOR;
-
     private static final int MAXIMUM_FIELD_LEN = maximumFieldLen;
     private static final int maxFieldLength = MAXIMUM_FIELD_LEN;
     private static final int TIME_LEN = 4;
@@ -91,20 +82,26 @@ public final class VUtil implements ConstraintValidator
     private static final String DATE_FORMAT = "yyyyMMdd";
     private static final char SUNDAY = '1';
     private static final char SATURDAY = '7';
-    private static final SimpleDateFormat TIME_FORMATER = new SimpleDateFormat( TIME_FORMAT );
-    private static final SimpleDateFormat DATE_FORMATER = new SimpleDateFormat( DATE_FORMAT );
+    private static final SimpleDateFormat TIME_FORMATER = getLenientFormat( TIME_FORMAT );
+    private static final SimpleDateFormat DATE_FORMATER = getLenientFormat( DATE_FORMAT );
+    private static volatile VUtil sINSTANCE = null;
 
-    private static volatile VUtil INSTANCE = null; 
+    private List<Validator> validators;
+    private String DSDVALIDATOR;
 
-    public static VUtil getInstance() {
-        if(INSTANCE == null) {
-            synchronized (VUtil.class) {
-                if(INSTANCE == null){
-        	        INSTANCE = new VUtil();
+    public static VUtil getInstance()
+    {
+        if(sINSTANCE == null)
+        {
+            synchronized (VUtil.class)
+            {
+                if(sINSTANCE == null)
+                {
+        	        sINSTANCE = new VUtil();
                 }
             }
         }
-        return INSTANCE;
+        return sINSTANCE;
     }
     
     /**
@@ -128,8 +125,6 @@ public final class VUtil implements ConstraintValidator
         {
             maximumFieldLen = Integer.parseInt( lengthProp );
         }
-        TIME_FORMATER.setLenient( false );
-        DATE_FORMATER.setLenient( false );
     }
 
     /**
@@ -807,5 +802,17 @@ public final class VUtil implements ConstraintValidator
             return group.getName();
         }
     }
-    
+
+    /**
+     * Return a simple date formatter that is lenient.
+     *
+     * @param format
+     * @return
+     */
+    private static SimpleDateFormat getLenientFormat(String format)
+    {
+        SimpleDateFormat tformatter = new SimpleDateFormat( format );
+        tformatter.setLenient( false );
+        return tformatter;
+    }
 }

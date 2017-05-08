@@ -56,7 +56,7 @@ public final class DelAdminMgrFactory
     /**
      * Create and return a reference to {@link DelAdminMgr} object.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return instance of {@link DelAdminMgr}.
      * @throws SecurityException in the event of failure during instantiation.
      */
@@ -85,15 +85,7 @@ public final class DelAdminMgrFactory
             delAdminMgr = (DelAdminMgr) ClassUtil.createInstance( dAdminClassName );
         }
 
-        if(delAdminMgr instanceof DelAdminMgrImpl){
-        	Config cfg = Config.getInstance();
-        	if(!cfg.isRemoteConfigLoaded()){
-        		cfg.loadRemoteConfig();
-        	}
-        }
-        
         delAdminMgr.setContextId(contextId);
-        
         return delAdminMgr;
     }
 
@@ -113,7 +105,7 @@ public final class DelAdminMgrFactory
     /**
      * Create and return a reference to {@link DelAdminMgr} object.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @param adminSess contains a valid Fortress A/RBAC Session object.
      * @return instance of {@link DelAdminMgr}.
      * @throws SecurityException in the event of failure during instantiation.

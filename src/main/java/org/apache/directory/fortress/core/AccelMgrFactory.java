@@ -52,7 +52,7 @@ public final class AccelMgrFactory
     /**
      * Create and return a reference to {@link AccelMgr} object.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return instance of {@link AccelMgr}.
      * @throws SecurityException in the event of failure during instantiation.
      */
@@ -70,13 +70,6 @@ public final class AccelMgrFactory
         else
         {
             accelMgr = (AccelMgr) ClassUtil.createInstance(accelClassName);
-        }
-        
-        if(accelMgr instanceof AccelMgrImpl){
-        	Config cfg = Config.getInstance();
-        	if(!cfg.isRemoteConfigLoaded()){
-        		cfg.loadRemoteConfig();
-        	}
         }
 
         accelMgr.setContextId(contextId);

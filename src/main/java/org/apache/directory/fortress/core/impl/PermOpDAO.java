@@ -1,4 +1,4 @@
-<!--
+/*
  *   Licensed to the Apache Software Foundation (ASF) under one
  *   or more contributor license agreements.  See the NOTICE file
  *   distributed with this work for additional information
@@ -16,22 +16,26 @@
  *   specific language governing permissions and limitations
  *   under the License.
  *
--->
-<html>
-<head>
-    <title>Package Documentation for org.apache.directory.fortress.core.util.crypto</title>
-</head>
-<body>
-<p>
-    This package uses <a href="http://www.jasypt.org/">Jasypt</a> to provide basic encryption/decryption functionality
-    of textual data.
-    The Main function on {@code EncryptUtil} class is called by the {@code encrypt} Ant target and can be used to
-    encrypt ad-hoc data including ldap server configuration passwords bound for {@code fortress.properties} file.
-</p>
+ */
+package org.apache.directory.fortress.core.impl;
 
-<p>
-    The <b>org.apache.directory.fortress.core.util.crypto</b> package contains utilities to perform basic crypto
-    functions on text.
-</p>
-</body>
-</html>
+import org.apache.directory.fortress.core.FinderException;
+import org.apache.directory.fortress.core.model.FortEntity;
+import org.apache.directory.fortress.core.model.Permission;
+
+public class PermOpDAO extends PermDAO implements PropertyProvider<Permission>
+{
+
+    @Override
+    public String getDn( Permission entity )
+    {
+        return this.getDn( entity, entity.getContextId() );
+    }
+
+    @Override
+    public FortEntity getEntity( Permission entity ) throws FinderException
+    {
+        return this.getPerm( entity );
+    }
+
+}

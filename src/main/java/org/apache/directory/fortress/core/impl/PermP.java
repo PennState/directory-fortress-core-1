@@ -65,18 +65,8 @@ final class PermP
     /**
      * Description of the Field
      */
-    private PermDAO pDao;
-    private OrgUnitP orgUnitP;
-
-
-    /**
-     * Package private constructor
-     */
-    PermP()
-    {
-        pDao = new PermDAO();
-        orgUnitP = new OrgUnitP();
-    }
+    private PermDAO pDao = new PermDAO();
+    private OrgUnitP orgUnitP = new OrgUnitP();
 
 
     /**
@@ -728,19 +718,27 @@ final class PermP
         {
             for(String paSetName : pOp.getPaSets())
             {
-                try
-                {
-                    PermissionAttributeSet paSet = new PermissionAttributeSet( paSetName );
-                    paSet.setContextId( pOp.getContextId() );
-                    paSet = read(paSet);
-                    VUtil.safeText( paSetName, GlobalIds.DESC_LEN );
-                }
-                catch( SecurityException e )
-                {
-                    String error = "validate - paSetName not found with name [" + paSetName + "] caught SecurityException=" + e;
-                    throw new ValidationException( GlobalErrIds.PERM_ATTRIBUTE_SET_NOT_FOUND, error );
-                }
+                validatePaSet( paSetName, pOp.getContextId() );
             }
+        }
+    }
+
+    /*
+     * Ensure the paSet is present and name is safe.
+     */
+    void validatePaSet( String paSetName, String contextId ) throws ValidationException
+    {
+        try
+        {
+            PermissionAttributeSet paSet = new PermissionAttributeSet( paSetName );
+            paSet.setContextId( contextId );
+            read(paSet);
+            VUtil.safeText( paSetName, GlobalIds.DESC_LEN );
+        }
+        catch( SecurityException e )
+        {
+            String error = "validatePaSet - paSetName not found with name [" + paSetName + "] caught SecurityException=" + e;
+            throw new ValidationException( GlobalErrIds.PERM_ATTRIBUTE_SET_NOT_FOUND, error );
         }
     }
     

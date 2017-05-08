@@ -26,7 +26,6 @@ import java.util.TreeSet;
 import org.apache.directory.fortress.core.AccessMgr;
 import org.apache.directory.fortress.core.GlobalErrIds;
 import org.apache.directory.fortress.core.SecurityException;
-import org.apache.directory.fortress.core.impl.AccessMgrImpl;
 import org.apache.directory.fortress.core.impl.Manageable;
 import org.apache.directory.fortress.core.model.*;
 import org.apache.directory.fortress.core.util.VUtil;
@@ -73,21 +72,20 @@ import org.apache.directory.fortress.core.util.VUtil;
  */
 public class AccessMgrRestImpl extends Manageable implements AccessMgr
 {
-    private static final String CLS_NM = AccessMgrImpl.class.getName();
+    private static final String CLS_NM = AccessMgrRestImpl.class.getName();
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public Session authenticate(String userId, char[] password)
+    public Session authenticate(String userId, String password)
         throws SecurityException
     {
         VUtil.assertNotNullOrEmpty(userId, GlobalErrIds.USER_ID_NULL, CLS_NM + ".authenticate");
         VUtil.assertNotNullOrEmpty(password, GlobalErrIds.USER_PW_NULL, ".authenticate");
         Session retSession;
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
-        request.setEntity(new User(userId, password));
+        FortRequest request = RestUtils.getRequest( this.contextId );
+        request.setEntity( new User( userId, password ) );
         String szRequest = RestUtils.marshal(request);
         String szResponse = RestUtils.getInstance().post(szRequest, HttpIds.RBAC_AUTHN);
         FortResponse response = RestUtils.unmarshall(szResponse);
@@ -111,8 +109,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
     {
         VUtil.assertNotNull(user, GlobalErrIds.USER_NULL, CLS_NM + ".createSession");
         Session retSession;
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity(user);
         String szRequest = RestUtils.marshal(request);
         String szResponse;
@@ -141,8 +138,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
     {
         VUtil.assertNotNull( group, GlobalErrIds.GROUP_NULL, CLS_NM + ".createSession" );
         Session retSession;
-        FortRequest request = new FortRequest();
-        request.setContextId( this.contextId );
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity( group );
         String szRequest = RestUtils.marshal( request );
         String szResponse = RestUtils.getInstance().post( szRequest, HttpIds.RBAC_CREATE_GROUP_SESSION );
@@ -168,8 +164,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
         VUtil.assertNotNull(perm, GlobalErrIds.PERM_NULL, CLS_NM + ".checkAccess");
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, CLS_NM + ".checkAccess");
         boolean result;
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         request.setEntity(perm);
         String szRequest = RestUtils.marshal(request);
@@ -197,8 +192,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
     {
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, CLS_NM + ".sessionPermissions");
         List<Permission> retPerms;
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         String szRequest = RestUtils.marshal(request);
         String szResponse = RestUtils.getInstance().post(szRequest, HttpIds.RBAC_PERMS);
@@ -225,8 +219,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
     {
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, CLS_NM + ".sessionRoles");
         List<UserRole> retRoles;
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         String szRequest = RestUtils.marshal(request);
         String szResponse = RestUtils.getInstance().post(szRequest, HttpIds.RBAC_ROLES);
@@ -253,8 +246,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
     {
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, CLS_NM + ".sessionRoles");
         Set<String> retRoleNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         String szRequest = RestUtils.marshal(request);
         String szResponse = RestUtils.getInstance().post(szRequest, HttpIds.RBAC_AUTHZ_ROLES);
@@ -284,8 +276,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
         String fullMethodName = CLS_NM + ".addActiveRole";
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, fullMethodName);
         VUtil.assertNotNull(role, GlobalErrIds.ROLE_NULL, fullMethodName);
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         request.setEntity(role);
         String szRequest = RestUtils.marshal(request);
@@ -312,8 +303,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
         String fullMethodName = ".dropActiveRole";
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, CLS_NM + fullMethodName);
         VUtil.assertNotNull(role, GlobalErrIds.ROLE_NULL, CLS_NM + fullMethodName);
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         request.setEntity(role);
         String szRequest = RestUtils.marshal(request);
@@ -339,8 +329,7 @@ public class AccessMgrRestImpl extends Manageable implements AccessMgr
     {
         VUtil.assertNotNull(session, GlobalErrIds.USER_SESS_NULL, CLS_NM + ".getUserId");
         String userId;
-        FortRequest request = new FortRequest();
-        request.setContextId(this.contextId);
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setSession(session);
         String szRequest = RestUtils.marshal(request);
         String szResponse = RestUtils.getInstance().post(szRequest, HttpIds.RBAC_USERID);

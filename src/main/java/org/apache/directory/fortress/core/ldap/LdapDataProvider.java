@@ -69,9 +69,8 @@ import org.apache.directory.fortress.core.model.FortEntity;
 import org.apache.directory.fortress.core.model.Hier;
 import org.apache.directory.fortress.core.model.Relationship;
 import org.apache.directory.fortress.core.util.Config;
+import org.apache.directory.fortress.core.util.LdapUtil;
 import org.apache.directory.ldap.client.api.LdapConnection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 
 /**
@@ -88,17 +87,10 @@ public abstract class LdapDataProvider
 {
     // Logging
     private static final String CLS_NM = LdapDataProvider.class.getName();
-    private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
-
     private static final int MAX_DEPTH = 100;
     private static final LdapCounters COUNTERS = new LdapCounters();
-
     private static final PasswordPolicy PP_REQ_CTRL = new PasswordPolicyImpl();
     
-    public LdapDataProvider(){
-
-    }
-
     /**
      * Given a contextId and a fortress param name return the LDAP dn.
      *
@@ -1189,13 +1181,13 @@ public abstract class LdapDataProvider
      * @return bindResponse contains the result of the operation.
      * @throws LdapException in the event of LDAP error.
      */
-    protected BindResponse bind( LdapConnection connection, String szUserDn, char[] password ) throws LdapException
+    protected BindResponse bind( LdapConnection connection, String szUserDn, String password ) throws LdapException
     {
         COUNTERS.incrementBind();
         Dn userDn = new Dn( szUserDn );
         BindRequest bindReq = new BindRequestImpl();
         bindReq.setDn( userDn );
-        bindReq.setCredentials( new String( password ) );
+        bindReq.setCredentials( password );
         bindReq.addControl( PP_REQ_CTRL );
         return connection.bind( bindReq );
     }

@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.directory.fortress.core.GlobalErrIds;
 import org.apache.directory.fortress.core.GlobalIds;
@@ -37,7 +36,6 @@ import org.apache.directory.fortress.core.model.Administrator;
 import org.apache.directory.fortress.core.model.ConstraintUtil;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.OrgUnit;
-import org.apache.directory.fortress.core.model.PermissionAttributeSet;
 import org.apache.directory.fortress.core.model.PwPolicy;
 import org.apache.directory.fortress.core.model.Role;
 import org.apache.directory.fortress.core.model.RoleConstraint;
@@ -70,26 +68,12 @@ import org.slf4j.LoggerFactory;
  */
 final class UserP
 {
-    //private static final boolean IS_SESSION_PROPS_ENABLED = Config.getBoolean( "user.session.props.enabled", false );
     private static final String CLS_NM = UserP.class.getName();
-    private static UserDAO uDao;
     private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
-    private PolicyP policyP;
-    private AdminRoleP admRoleP;
-    private OrgUnitP orgUnitP;
-
-
-    /**
-     * Package private constructor.
-     */
-    UserP()
-    {
-    	uDao = new UserDAO();
-        policyP = new PolicyP();
-        admRoleP = new AdminRoleP();
-        orgUnitP = new OrgUnitP();
-    }
-
+    private UserDAO uDao = new UserDAO();
+    private PolicyP policyP = new PolicyP();
+    private AdminRoleP admRoleP = new AdminRoleP();
+    private OrgUnitP orgUnitP = new OrgUnitP();
 
     /**
      * Takes a User entity that contains full or partial userId OR a full internal userId for search.
@@ -142,7 +126,7 @@ final class UserP
      * Return a list of Users that are authorized the given Role.
      *
      * @param roles contains the set of role names targeted for search.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return Set of type String containing the userId's for matching User entities. If no records found this will be empty.
      * @throws SecurityException in the event of DAO search error.
      */
@@ -577,7 +561,7 @@ final class UserP
      * @param newPassword contains the new password which must pass the password policy constraints.
      * @throws SecurityException in the event of data validation failure, password policy violation or DAO error.
      */
-    void changePassword( User entity, char[] newPassword ) throws SecurityException
+    void changePassword( User entity, String newPassword ) throws SecurityException
     {
         String userId = entity.getUserId();
         boolean result = uDao.changePassword( entity, newPassword );
@@ -766,19 +750,14 @@ final class UserP
         }
         try
         {
-            PermissionAttributeSet paSet = new PermissionAttributeSet( rc.getPaSetName() );
-            paSet.setContextId( contextId );
             PermP permP = new PermP();
-            paSet = permP.read( paSet );
-            VUtil.safeText( rc.getPaSetName(), GlobalIds.DESC_LEN );
+            permP.validatePaSet( rc.getPaSetName(), contextId );
         }
         catch( SecurityException e )
         {
             String error = "validate - paSetName not found with name [" + rc.getPaSetName() + "] caught SecurityException=" + e;
             throw new ValidationException( GlobalErrIds.PERM_ATTRIBUTE_SET_NOT_FOUND, error );
         }
-
-
         if ( rc.getType() == null )
         {
             throw new ValidationException( GlobalErrIds.ROLE_CONSTRAINT_TYPE_NULL, CLS_NM + ".validate type is NULL" );
@@ -820,9 +799,9 @@ final class UserP
                 VUtil.safeText( entity.getSn(), GlobalIds.SN_LEN );
             }
             // password is not required on user object but user cannot execute AccessMgr or DelAccessMgr methods w/out pw.
-            if ( ArrayUtils.isNotEmpty( entity.getPassword() ) )
+            if ( StringUtils.isNotEmpty( entity.getPassword() ) )
             {
-                VUtil.password( entity.getPassword() );
+                VUtil.safeText( entity.getPassword(), GlobalIds.PASSWORD_LEN );
             }
             // the OU attribute is required:
             if ( StringUtils.isEmpty( entity.getOu() ) )
@@ -857,9 +836,9 @@ final class UserP
             {
                 VUtil.safeText( entity.getSn(), GlobalIds.SN_LEN );
             }
-            if ( ArrayUtils.isNotEmpty( entity.getPassword() ) )
+            if ( StringUtils.isNotEmpty( entity.getPassword() ) )
             {
-                VUtil.password( entity.getPassword() );
+                VUtil.safeText( entity.getPassword(), GlobalIds.PASSWORD_LEN );
             }
             if ( StringUtils.isNotEmpty( entity.getOu() ) )
             {

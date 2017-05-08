@@ -19,7 +19,6 @@
  */
 package org.apache.directory.fortress.core;
 
-import org.apache.directory.fortress.core.impl.OrgUnitP;
 import org.apache.directory.fortress.core.impl.TestUtils;
 import org.apache.directory.fortress.core.model.*;
 
@@ -142,7 +141,7 @@ class AccessMgrConsole
             String userId = ReaderUtil.readLn();
             System.out.println("Enter password:");
             String password = ReaderUtil.readLn();
-            session = am.authenticate(userId, password.toCharArray());
+            session = am.authenticate(userId, password);
             System.out.println("Authentication successful for userId [" + userId + "]");
             System.out.println("session [" + session + "]");
             System.out.println("ENTER to continue");
@@ -164,7 +163,7 @@ class AccessMgrConsole
             String userId = ReaderUtil.readLn();
             System.out.println("Enter password:");
             String password = ReaderUtil.readLn();
-            session = am.createSession(new User(userId, password.toCharArray()), false);
+            session = am.createSession(new User(userId, password), false);
             System.out.println("Session created successfully for userId [" + userId + "]");
             System.out.println("session [" + session + "]");
             System.out.println("ENTER to continue");
@@ -216,7 +215,7 @@ class AccessMgrConsole
             else
             {
                 System.out.println("Enter password:");
-                user.setPassword(ReaderUtil.readLn().toCharArray());
+                user.setPassword(ReaderUtil.readLn());
             }
             System.out.println("Enter prop key (or NULL to skip):");
             String key = ReaderUtil.readLn();

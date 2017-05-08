@@ -57,7 +57,7 @@ import org.apache.directory.fortress.core.model.PermObj;
 import org.apache.directory.fortress.core.model.Permission;
 import org.apache.directory.fortress.core.model.PermissionAttribute;
 import org.apache.directory.fortress.core.model.PermissionAttributeSet;
-import org.apache.directory.fortress.core.model.PropUtil;
+import org.apache.directory.fortress.core.util.PropUtil;
 import org.apache.directory.fortress.core.model.Role;
 import org.apache.directory.fortress.core.model.Session;
 import org.apache.directory.fortress.core.model.User;
@@ -154,7 +154,7 @@ import org.apache.directory.ldap.client.api.LdapConnection;
  * 
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  */
-final class PermDAO extends LdapDataProvider
+class PermDAO extends LdapDataProvider
 {
     /*
       *  *************************************************************************
@@ -180,6 +180,24 @@ final class PermDAO extends LdapDataProvider
             SchemaConstants.TOP_OC,
             SchemaConstants.ORGANIZATIONAL_ROLE_OC,
             PERM_OP_OBJECT_CLASS_NAME,
+            GlobalIds.PROPS_AUX_OBJECT_CLASS_NAME,
+            GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME
+    };
+    
+    private static final String PERM_ATTR_SET_OBJ_CLASS[] =
+        {
+            SchemaConstants.TOP_OC,
+            SchemaConstants.ORGANIZATIONAL_UNIT_OC,
+            PERMISSION_ATTRIBUTE_SET_OBJECT_CLASS_NAME,
+            GlobalIds.PROPS_AUX_OBJECT_CLASS_NAME,
+            GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME
+    };
+    
+    private static final String PERM_ATTR_OBJ_CLASS[] =
+        {
+            SchemaConstants.TOP_OC,
+            SchemaConstants.ORGANIZATIONAL_ROLE_OC,
+            PERMISSION_ATTRIBUTE_OBJECT_CLASS_NAME,
             GlobalIds.PROPS_AUX_OBJECT_CLASS_NAME,
             GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME
     };
@@ -229,10 +247,6 @@ final class PermDAO extends LdapDataProvider
         GlobalIds.FT_PERMISSION_ATTRIBUTE_VALID_VALUES
     };
 
-    public PermDAO(){
-        super();
-    }
-    
     /**
      * @param entity
      * @return
@@ -490,7 +504,7 @@ final class PermDAO extends LdapDataProvider
         {
             Entry entry = new DefaultEntry( dn );
 
-            entry.add( SchemaConstants.OBJECT_CLASS_AT, PERMISSION_ATTRIBUTE_SET_OBJECT_CLASS_NAME );
+            entry.add( SchemaConstants.OBJECT_CLASS_AT, PERM_ATTR_SET_OBJ_CLASS );
 
             entry.add( GlobalIds.FT_PERMISSION_ATTRIBUTE_SET, entity.getName() );
             
@@ -555,7 +569,7 @@ final class PermDAO extends LdapDataProvider
         {
             Entry entry = new DefaultEntry( dn );
 
-            entry.add( SchemaConstants.OBJECT_CLASS_AT, PERMISSION_ATTRIBUTE_OBJECT_CLASS_NAME );
+            entry.add( SchemaConstants.OBJECT_CLASS_AT, PERM_ATTR_OBJ_CLASS );
 
             // this will generate a new random, unique id on this entity:
             entity.setInternalId();            
@@ -1907,7 +1921,7 @@ final class PermDAO extends LdapDataProvider
                     filterbuf.append( "(" );
                     filterbuf.append( ROLES );
                     filterbuf.append( "=" );
-                    filterbuf.append( uRole );
+                    filterbuf.append( encodeSafeText( uRole, GlobalIds.ROLE_LEN ) );
                     filterbuf.append( ")" );
                 }
             }
@@ -2102,14 +2116,14 @@ final class PermDAO extends LdapDataProvider
     }
 
 
-    private String getDn( Permission pOp, String contextId )
+    protected String getDn( Permission pOp, String contextId )
     {
         return getOpRdn( pOp.getOpName(), pOp.getObjId() ) + "," + GlobalIds.POBJ_NAME + "=" + pOp.getObjName()
             + "," + getRootDn( pOp.isAdmin(), contextId );
     }
 
 
-    private String getDn( PermObj pObj, String contextId )
+    protected String getDn( PermObj pObj, String contextId )
     {
         return GlobalIds.POBJ_NAME + "=" + pObj.getObjName() + "," + getRootDn( pObj.isAdmin(), contextId );
     }

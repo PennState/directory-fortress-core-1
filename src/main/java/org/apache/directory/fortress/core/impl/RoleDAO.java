@@ -49,6 +49,7 @@ import org.apache.directory.fortress.core.model.Graphable;
 import org.apache.directory.fortress.core.model.Group;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.Role;
+import org.apache.directory.fortress.core.util.PropUtil;
 import org.apache.directory.ldap.client.api.LdapConnection;
 
 
@@ -97,7 +98,7 @@ import org.apache.directory.ldap.client.api.LdapConnection;
  *
  * @author Kevin McKinney
  */
-final class RoleDAO extends LdapDataProvider
+final class RoleDAO extends LdapDataProvider implements PropertyProvider<Role>
 {
     /*
       *  *************************************************************************
@@ -118,7 +119,8 @@ final class RoleDAO extends LdapDataProvider
             SchemaConstants.DESCRIPTION_AT,
             GlobalIds.CONSTRAINT,
             SchemaConstants.ROLE_OCCUPANT_AT,
-            GlobalIds.PARENT_NODES
+            GlobalIds.PARENT_NODES,
+            GlobalIds.PROPS
     };
 
     /**
@@ -132,10 +134,6 @@ final class RoleDAO extends LdapDataProvider
             GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME
     };
 
-    public RoleDAO() {
-        super();
-	}
-    
     /**
      * @param entity
      * @return
@@ -483,7 +481,7 @@ final class RoleDAO extends LdapDataProvider
         List<Role> roleList = new ArrayList<>();
         LdapConnection ld = null;
         String roleRoot = getRootDn( group.getContextId(), GlobalIds.ROLE_ROOT );
-        StringBuilder filterbuf = null;
+        StringBuilder filterbuf = new StringBuilder();
 
         try
         {
@@ -493,7 +491,6 @@ final class RoleDAO extends LdapDataProvider
             List<String> members = group.getMembers();
             if ( CollectionUtils.isNotEmpty( members ) )
             {
-                filterbuf = new StringBuilder();
                 filterbuf.append( GlobalIds.FILTER_PREFIX );
                 filterbuf.append( GlobalIds.ROLE_OBJECT_CLASS_NM );
                 filterbuf.append( ")(" );
@@ -507,15 +504,21 @@ final class RoleDAO extends LdapDataProvider
                     filterbuf.append( ")" );
                 }
                 filterbuf.append( "))" );
-            }
-            ld = getAdminConnection();
-            SearchCursor searchResults = search( ld, roleRoot,
-                SearchScope.ONELEVEL, filterbuf.toString(), ROLE_ATRS, false, GlobalIds.BATCH_SIZE );
-            long sequence = 0;
 
-            while ( searchResults.next() )
+                ld = getAdminConnection();
+                SearchCursor searchResults = search( ld, roleRoot,
+                    SearchScope.ONELEVEL, filterbuf.toString(), ROLE_ATRS, false, GlobalIds.BATCH_SIZE );
+                long sequence = 0;
+
+                while ( searchResults.next() )
+                {
+                    roleList.add( unloadLdapEntry( searchResults.getEntry(), sequence++, group.getContextId() ) );
+                }
+            }
+            else
             {
-                roleList.add( unloadLdapEntry( searchResults.getEntry(), sequence++, group.getContextId() ) );
+                String error = "groupRoles passed empty member list";
+                throw new FinderException( GlobalErrIds.GROUP_MEMBER_NULL, error );
             }
         }
         catch ( LdapException e )
@@ -720,9 +723,10 @@ final class RoleDAO extends LdapDataProvider
         entity.setOccupants( getAttributes( le, SchemaConstants.ROLE_OCCUPANT_AT ) );
         //entity.setParents(RoleUtil.getParents(entity.getName().toUpperCase(), contextId));
         entity.setChildren( RoleUtil.getInstance().getChildren( entity.getName().toUpperCase(), contextId ) );
-        entity.setParents( getAttributeSet( le, GlobalIds.PARENT_NODES ) );
+        entity.setParents( getAttributeSet( le, GlobalIds.PARENT_NODES ) );        
         unloadTemporal( le, entity );
-        entity.setDn( le.getDn().getName() );
+        entity.setDn( le.getDn().getName() );        
+        entity.addProperties( PropUtil.getProperties( getAttributes( le, GlobalIds.PROPS ) ) );
         return entity;
     }
 
@@ -730,5 +734,19 @@ final class RoleDAO extends LdapDataProvider
     private String getDn( String name, String contextId )
     {
         return SchemaConstants.CN_AT + "=" + name + "," + getRootDn( contextId, GlobalIds.ROLE_ROOT );
+    }
+
+
+    @Override
+    public String getDn( Role entity )
+    {
+        return this.getDn( entity.getName(), entity.getContextId() );
+    }
+
+
+    @Override
+    public Role getEntity( Role entity ) throws FinderException
+    {
+        return this.getRole( entity );
     }
 }

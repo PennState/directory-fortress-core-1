@@ -55,7 +55,7 @@ public final class AccessMgrFactory
     /**
      * Create and return a reference to {@link AccessMgr} object.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return instance of {@link AccessMgr}.
      * @throws SecurityException in the event of failure during instantiation.
      */
@@ -80,13 +80,6 @@ public final class AccessMgrFactory
         else
         {
             accessMgr = (AccessMgr) ClassUtil.createInstance(accessClassName);
-        }
-        
-        if(accessMgr instanceof AccessMgrImpl){
-        	Config cfg = Config.getInstance();
-        	if(!cfg.isRemoteConfigLoaded()){
-        		cfg.loadRemoteConfig();
-        	}
         }
 
         accessMgr.setContextId(contextId);

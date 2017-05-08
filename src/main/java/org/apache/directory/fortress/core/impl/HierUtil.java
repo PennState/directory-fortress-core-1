@@ -27,7 +27,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.directory.fortress.core.model.Graphable;
@@ -76,7 +75,7 @@ final class HierUtil
     /**
      * The 'Type' attribute corresponds to what type of hierarchy is being referred to.
      */
-    static enum Type
+    enum Type
     {
         ROLE,
         ARLE,
@@ -600,7 +599,7 @@ final class HierUtil
      * <li>Permission Organizational Unit relations are stored in {@code cn=Hierarchies,ou=OS-P,ou=ARBAC} node and cached as {@link org.apache.directory.fortress.core.impl.PsoUtil}</li>
      * </ol>
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return reference the the Hier result set retrieved from ldap.
      */
     static Hier loadHier( String contextId, List<Graphable> descendants )

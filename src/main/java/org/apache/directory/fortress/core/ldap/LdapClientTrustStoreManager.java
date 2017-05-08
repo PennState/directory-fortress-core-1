@@ -22,6 +22,8 @@ package org.apache.directory.fortress.core.ldap;
 
 import org.apache.directory.fortress.core.CfgRuntimeException;
 import org.apache.directory.fortress.core.GlobalErrIds;
+import org.apache.directory.fortress.core.GlobalIds;
+import org.apache.directory.fortress.core.util.Config;
 import org.apache.directory.fortress.core.util.ResourceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +31,7 @@ import org.slf4j.LoggerFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -45,6 +48,13 @@ import java.util.Date;
  * client-to-server communications over TLS/SSL.
  * It is used during certificate validation operations within JSSE.
  * <p>
+ * There are the controlling fortress.properties:
+ * <ul>
+ *     <li>trust.store : contains the name of the truststore (must be fully qualified iff trust.store.onclasspath=false</li>
+ *     <li>trust.store.password : contains the pw for the specified truststore</li>
+ *     <li>trust.onclasspath : if false name must be fully qualified, otherwise file must be on classpath as named</li>
+ * </ul>
+ *
  * Note: This class allows self-signed certificates to pass the validation checks.
  *
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
@@ -60,7 +70,7 @@ public final class LdapClientTrustStoreManager implements X509TrustManager, Seri
     // Config variables
     private final boolean isExamineValidityDates;
     private final char[] trustStorePw;
-    // This is found on the classpath:
+    // This is found on the classpath if trust.store.onclasspath = true (default), otherwise must include exact location on filepath:
     private final String trustStoreFile;
     private final String trustStoreFormat;
 
@@ -68,7 +78,7 @@ public final class LdapClientTrustStoreManager implements X509TrustManager, Seri
     /**
      * Constructor used by connection configuration utility to load trust store manager.
      *
-     * @param trustStoreFile    contains fully qualified name of trust store file.
+     * @param trustStoreFile    contains name of trust store file.
      * @param trustStorePw      contains the password for trust store
      * @param trustStoreFormat  contains the format for trust store
      * @param isExamineValidity boolean var determines if certificate will be examined for valid dates on load.
@@ -82,7 +92,7 @@ public final class LdapClientTrustStoreManager implements X509TrustManager, Seri
             throw new CfgRuntimeException( GlobalErrIds.FT_CONFIG_JSSE_TRUSTSTORE_NULL,
                 "LdapClientTrustStoreManager constructor : input file name is null" );
         }
-        // contains the fully-qualified file name of a valid JSSE TrustStore on local file system:
+        // contains the file name of a valid JSSE TrustStore found on classpath:
         this.trustStoreFile = trustStoreFile;
         // the password to the JSSE TrustStore:
         this.trustStorePw = trustStorePw.clone();
@@ -155,6 +165,33 @@ public final class LdapClientTrustStoreManager implements X509TrustManager, Seri
     private synchronized X509TrustManager[] getTrustManagers( final X509Certificate[] x509Chain ) throws
         CertificateException
     {
+        String szTrustStoreOnClasspath = Config.getInstance().getProperty( GlobalIds.TRUST_STORE_ON_CLASSPATH );
+
+        // If false or null, read the truststore from a fully qualified filename.
+        if( szTrustStoreOnClasspath != null && szTrustStoreOnClasspath.equalsIgnoreCase( "false" ))
+        {
+            LOG.info( CLS_NM + ".getTrustManagers on filepath" );
+            return getTrustManagersOnFilepath( x509Chain );
+        }
+        // Get it off the classpath
+        else
+        {
+            LOG.info( CLS_NM + ".getTrustManagers on classpath" );
+            return getTrustManagersOnClasspath( x509Chain );
+        }
+    }
+
+
+    /**
+     * Return array of trust managers to caller.  Will verify that current date is within certs validity period.
+     *
+     * @param x509Chain contains input X.509 certificate chain.
+     * @return array of X.509 trust managers.
+     * @throws CertificateException if trustStoreFile instance variable is null.
+     */
+    private synchronized X509TrustManager[] getTrustManagersOnClasspath( final X509Certificate[] x509Chain ) throws
+        CertificateException
+    {
         // If true, verify the current date is within each certificates validity period.
         if ( isExamineValidityDates )
         {
@@ -178,6 +215,35 @@ public final class LdapClientTrustStoreManager implements X509TrustManager, Seri
             // Eat this ioexception because it shouldn't be a problem, but log just in case:
             LOG.warn("LdapClientTrustStoreManager.getTrustManagers on input stream close " +
                     "operation caught IOException={}", e.getMessage());
+        }
+        return loadTrustManagers( getTrustStore() );
+    }
+
+
+    /**
+     * Return array of trust managers to caller.  Will verify that current date is within certs validity period.
+     *
+     * @param x509Chain contains input X.509 certificate chain.
+     * @return array of X.509 trust managers.
+     * @throws CertificateException if trustStoreFile instance variable is null.
+     */
+    private synchronized X509TrustManager[] getTrustManagersOnFilepath( final X509Certificate[] x509Chain ) throws
+        CertificateException
+    {
+        // If true, verify the current date is within each certificates validity period.
+        if ( isExamineValidityDates )
+        {
+            final Date currentDate = new Date();
+            for ( final X509Certificate x509Cert : x509Chain )
+            {
+                x509Cert.checkValidity( currentDate );
+            }
+        }
+        // The trustStoreFile should contain the fully-qualified name of a Java TrustStore on local file system.
+        final File trustStoreFile = new File( this.trustStoreFile );
+        if ( !trustStoreFile.exists() )
+        {
+            throw new CertificateException( "FortressTrustStoreManager.getTrustManagers : file not found" );
         }
         return loadTrustManagers( getTrustStore() );
     }
@@ -282,7 +348,7 @@ public final class LdapClientTrustStoreManager implements X509TrustManager, Seri
         InputStream result = ResourceUtil.getInputStream(trustStoreFile);
         if (null == result)
         {
-            throw new CertificateException("LdapClientTrustStoreManager.getTrustStoreInputStream file does not exist" );
+            throw new CertificateException("LdapClientTrustStoreManager.getTrustStoreInputStream file does not exist on fortress classpath" );
         }
         return result;
     }

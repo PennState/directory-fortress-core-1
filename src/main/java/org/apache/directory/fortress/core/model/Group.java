@@ -20,6 +20,8 @@
 package org.apache.directory.fortress.core.model;
 
 
+import org.apache.directory.fortress.core.util.PropUtil;
+
 import javax.xml.bind.annotation.*;
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -29,6 +31,50 @@ import java.util.Properties;
 import java.util.StringTokenizer;
 
 
+/**
+ * All entities (User, Role, Permission, Policy, SDSet, etc...) are used to carry data between Fortress's
+ * layers starting with the (1) Manager layer down thru middle (2) Process layer and it's processing rules into
+ * (3) DAO layer where persistence with the LDAP server occurs.  The clients must instantiate an Fortress entity before use
+ * and must provide enough information to uniquely identity target record for reads.
+ * <p>
+ * <h4>Group Schema</h4>
+ * <p>
+ * The Fortress Group entity is a composite of 2 different LDAP Schema object classes:
+ * <p>
+ * 1. groupOfNames Structural Object Class is used to manage groups within LDAP.
+ * <pre>
+ * ------------------------------------------
+ * objectClasses: ( 2.5.6.9 NAME 'groupOfNames'
+ * DESC 'RFC2256: a group of names (DNs)' SUP top STRUCTURAL
+ * MUST (
+ * member $ cn )
+ * MAY
+ * ( businessCategory $ seeAlso $ owner $ ou $ o $ description
+ * )
+ * )
+ * ------------------------------------------
+ * </pre>
+ * <p>
+ * 2. configGroup STRUCTURAL Object Class is used to store groups and their relationships to users or roles.
+ * <pre>
+ * ------------------------------------------
+ * LDAP Configuration Group Structural Object Class
+ * objectClass ( ftObId:8
+ * NAME 'configGroup'
+ * DESC 'LDAP Configuration Group'
+ * S
+ * SUP groupOfNames
+ * MUST (
+ * configProtocol $
+ * ftType
+ * )
+ * MAY configParameter
+ * )
+ * ------------------------------------------
+ * </pre>
+ *
+ * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
+ */
 @XmlRootElement(name = "fortGroup")
 @XmlAccessorType(XmlAccessType.FIELD)
 @XmlType(name = "group", propOrder =

@@ -18,7 +18,7 @@
 
 # OpenLDAP & Fortress QUICKSTART
 
- Apache Fortress 1.0.2-SNAPSHOT and OpenLDAP Quickstart System Architecture
+ Apache Fortress 2.0.0-RC2 and OpenLDAP Quickstart System Architecture
  ![OpenLDAP & Fortress System Architecture](images/fortress-openldap-accel-system-arch.png "OpenLDAP & Fortress System Architecture")
 
 -------------------------------------------------------------------------------
@@ -35,7 +35,7 @@
 ___________________________________________________________________________________
 ## Document Overview
 
- * This document contains instructions to install Apache Fortress 1.0.1 Core, Web, Rest and OpenLDAP.
+ * This document contains instructions to install Apache Fortress 2.0.0-RC2 Core, Web, Rest and OpenLDAP.
 
 -------------------------------------------------------------------------------
 ## SECTION 1. Prerequisites
@@ -46,7 +46,7 @@ Minimum hardware requirements:
 
 Minimum software requirements:
  * Centos or Debian Machine
- * Java SDK 7++
+ * Java SDK 8
  * Apache Maven3++
 
  *Everything else covered in steps that follow.*
@@ -57,15 +57,15 @@ ________________________________________________________________________________
 
  a. from git:
  ```
- git clone --branch 1.0.1 https://git-wip-us.apache.org/repos/asf/directory-fortress-core.git
+ git clone --branch 2.0.0-RC2 https://git-wip-us.apache.org/repos/asf/directory-fortress-core.git
  cd directory-fortress-core
  ```
 
  b. or download package:
  ```
- wget http://www.apache.org/dist/directory/fortress/dist/1.0.1/fortress-core-1.0.1-source-release.zip
- unzip fortress-core-1.0.1-source-release.zip
- cd fortress-core-1.0.1
+ wget http://www.apache.org/dist/directory/fortress/dist/2.0.0-RC2/fortress-core-2.0.0-RC2-source-release.zip
+ unzip fortress-core-2.0.0-RC2-source-release.zip
+ cd fortress-core-2.0.0-RC2
  ```
 
 2. Prepare the package:
@@ -77,12 +77,8 @@ ________________________________________________________________________________
 
  *[slapd.properties.example](slapd.properties.example) contains the slapd default config. Learn more about how the config works: [README-CONFIG](README-CONFIG.md)*
 
-3. Download Symas OpenLDAP Silver *Full Server and Client Installation*:
- https://symas.com/downloads/
-
- ![Symas OpenLDAP Download Page](images/sol-silver-downloads.png)
-
-  *SILVER downloads don't require a registration.*
+3. Download the latest OpenLDAP binaries for your platform:
+ [Symas OpenLDAP Silver Edition](https://downloads.symas.com/products/symas-openldap-directory-silver-edition/)
 
 4. Place either a centos or debian package under the folder named *ldap* : [fortress-core-[VERSION]/ldap](./ldap)
 
@@ -92,16 +88,14 @@ ________________________________________________________________________________
  vi slapd.properties
  ```
 
-6. Update the *slapd.properties* file *slapd.install* statement with a reference to the openldap install downloaded earlier.
+6. Update the *slapd.properties* file *slapd.install* statement with a reference to the openldap file install downloaded earlier.
 
  a. For Debian installs:
-
   ```
   slapd.install=dpkg -i symas-openldap-silver.version.platform.deb
   ```
 
  b. For Centos:
-
   ```
   slapd.install=rpm -i symas-openldap-silver.version.platform.rpm
   ```
@@ -109,7 +103,6 @@ ________________________________________________________________________________
 7. Specify whether you want to enable the slapo-rbac overlay:
 
  a. Yes, I want to enable slapo-rbac:
-
   ```
   rbac.accelerator=true
   ```
@@ -117,14 +110,53 @@ ________________________________________________________________________________
  *To use this option, symas-openldap version 2.4.43++ is required.*
 
  b. No, I don't want to enable slapo-rbac:
-
   ```
   rbac.accelerator=false
   ```
 
-8. Save and exit
+8. (optional) Specify whether you want to communicate over SSL using LDAPS:
 
-9. Prepare your terminal for execution of maven commands.
+ a. Place .pem files for ca-certificate, server certificate and private key in folder named *certs* : [fortress-core-[VERSION]/src/test/resources/certs](./src/test/resources/certs)
+
+  These will get copied to openldap ssl folder during init-slapd target.
+  For example:
+  - ca-cert.pem is the ca certificate file
+  - server-cert.pem is the server certificate
+  - server-key.pem is the server private key
+
+ b. add or replace the following slapd.properties:
+
+  ```
+  # These are needed for client SSL connections with LDAP Server:
+  enable.ldap.ssl=true
+  # The LDAP hostname must match the common name in the server certificate:
+  ldap.host=fortressdemo2.com
+  # 636 is default LDAPS on OpenLDAP:
+  ldap.port=636
+  enable.ldap.ssl.debug=true
+  # The trust store is found either on the application's classpath or filepath as specified by trust.store.onclasspath:
+  trust.store=mytruststore
+  trust.store.password=changeit
+  # Will pick up the truststore from the classpath if set to true  which is the default.  Otherwise, file must be specified a fully qualified filename:
+  trust.store.onclasspath=true
+
+  # These are needed for slapd startup SSL configuration:
+  ldap.uris=ldap://${ldap.host}:389 ldaps://${ldap.host}:${ldap.port}
+
+  # These are the 3 crypto artifacts copied earlier:
+  tls.ca.cert.file=ca-cert.pem
+  tls.cert.file=server-cert.pem
+  tls.key.file=server-key.pem
+  ```
+
+  more notes
+  - whatever used for LDAP host name must match the common name element of the server's certificate
+  - the truststore may be found on the classpath or as a fully qualified file name determined by trust.store.onclasspath.
+  - The LDAP URIs are used by the server listener during startup.
+
+9. Save and exit
+
+10. Prepare your terminal for execution of maven commands.
 
  ```
  #!/bin/sh
@@ -133,25 +165,25 @@ ________________________________________________________________________________
  export PATH=$PATH:$M2_HOME/bin
  ```
 
-10. Run the maven install:
+11. Run the maven install:
 
  ```
  mvn clean install
  ```
 
-11. Install, configure and load the slapd server:
+12. Install, configure and load the slapd server:
 
   ```
   mvn test -Pinit-slapd
   ```
 
-12. To start the slapd process:
+13. To start the slapd process:
 
   ```
   mvn test -Pstart-slapd
   ```
 
-13. To stop the slapd process:
+14. To stop the slapd process:
 
   ```
   mvn test -Pstop-slapd
@@ -263,7 +295,7 @@ During this section, you will be asked to setup Apache Tomcat 8 and prepare for 
 2. Download the fortress realm proxy jar into tomcat/lib folder:
 
   ```
-  sudo wget http://repo.maven.apache.org/maven2/org/apache/directory/fortress/fortress-realm-proxy/1.0.1/fortress-realm-proxy-1.0.1.jar -P /usr/local/tomcat8/lib
+  sudo wget http://repo.maven.apache.org/maven2/org/apache/directory/fortress/fortress-realm-proxy/2.0.0-RC2/fortress-realm-proxy-2.0.0-RC2.jar -P /usr/local/tomcat8/lib
   ```
 
 3. Prepare tomcat fortress usage:
@@ -358,15 +390,15 @@ During this section, you will be asked to setup Apache Fortress Rest Application
 
  a. from git:
  ```
- git clone --branch 1.0.1 https://git-wip-us.apache.org/repos/asf/directory-fortress-enmasse.git
+ git clone --branch 2.0.0-RC2 https://git-wip-us.apache.org/repos/asf/directory-fortress-enmasse.git
  cd directory-fortress-enmasse
  ```
 
  b. or download package:
  ```
- wget http://www.apache.org/dist/directory/fortress/dist/1.0.1/fortress-rest-1.0.1-source-release.zip
- unzip fortress-rest-1.0.1-source-release.zip
- cd fortress-rest-1.0.1
+ wget http://www.apache.org/dist/directory/fortress/dist/2.0.0-RC2/fortress-rest-2.0.0-RC2-source-release.zip
+ unzip fortress-rest-2.0.0-RC2-source-release.zip
+ cd fortress-rest-2.0.0-RC2
  ```
 
 2. Prepare:
@@ -404,15 +436,15 @@ During this section, you will be asked to setup Apache Fortress Web Application
 
  a. from git:
  ```
- git clone --branch 1.0.1 https://git-wip-us.apache.org/repos/asf/directory-fortress-commander.git
+ git clone --branch 2.0.0-RC2 https://git-wip-us.apache.org/repos/asf/directory-fortress-commander.git
  cd directory-fortress-commander
  ```
 
  b. or download package:
  ```
- wget http://www.apache.org/dist/directory/fortress/dist/1.0.1/fortress-web-1.0.1-source-release.zip
- unzip fortress-web-1.0.1-source-release.zip
- cd fortress-web-1.0.1
+ wget http://www.apache.org/dist/directory/fortress/dist/2.0.0-RC2/fortress-web-2.0.0-RC2-source-release.zip
+ unzip fortress-web-2.0.0-RC2-source-release.zip
+ cd fortress-web-2.0.0-RC2
  ```
 
 2. Prepare:

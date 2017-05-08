@@ -23,7 +23,7 @@ package org.apache.directory.fortress.core.ant;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.directory.fortress.core.model.PropUtil;
+import org.apache.directory.fortress.core.util.PropUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.directory.fortress.core.model.User;
@@ -293,18 +293,6 @@ public class UserAnt extends User
     }
 
     private String country;
-
-    /**
-     * Generally not good practice to handle passwords as Strings in Java but this method allows Ant's digester to consume field in String format from the xml input file.
-     * It subsequently converts to char[] as needed by the parent entity - {@link User}.
-     *
-     * @param password String format will be converted to char[].
-     */
-    public void setPassword( String password )
-    {
-        super.setPassword( password.toCharArray() );
-    }
-
 
     /**
      * Return phone for a user.

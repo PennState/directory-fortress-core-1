@@ -46,6 +46,7 @@ import org.apache.directory.fortress.core.UpdateException;
 import org.apache.directory.fortress.core.ldap.LdapDataProvider;
 import org.apache.directory.fortress.core.model.*;
 import org.apache.directory.fortress.core.util.Config;
+import org.apache.directory.fortress.core.util.PropUtil;
 import org.apache.directory.ldap.client.api.LdapConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +58,7 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  */
-final class GroupDAO extends LdapDataProvider
+final class GroupDAO extends LdapDataProvider implements PropertyProvider<Group>
 {
     private static final String CLS_NM = GroupDAO.class.getName();
     private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
@@ -559,5 +560,19 @@ final class GroupDAO extends LdapDataProvider
     private String getDn( String name, String contextId )
     {
         return SchemaConstants.CN_AT + "=" + name + "," + getRootDn( contextId, GlobalIds.GROUP_ROOT );
+    }
+
+
+    @Override
+    public String getDn( Group entity )
+    {
+        return getDn( entity.getName(), entity.getContextId() );
+    }
+
+
+    @Override
+    public FortEntity getEntity( Group entity ) throws FinderException
+    {
+        return this.get( entity );
     }
 }

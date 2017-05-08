@@ -32,10 +32,17 @@ import org.apache.directory.fortress.core.util.VUtil;
 
 import java.util.List;
 
+/**
+ * This Manager impl supplies CRUD methods used to manage groups using REST.
+ * LDAP group nodes are used for utility and security functions within various systems and apps.
+ * <p>
+ * This class is thread safe.
+ *
+ * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
+ */
 public class GroupMgrRestImpl  extends Manageable implements GroupMgr
 {
     private static final String CLS_NM = GroupMgrRestImpl.class.getName();
-
 
     /**
      * {@inheritDoc}
@@ -45,8 +52,7 @@ public class GroupMgrRestImpl  extends Manageable implements GroupMgr
     {
         VUtil.assertNotNull( group, GlobalErrIds.GROUP_NULL, CLS_NM + ".add" );
         Group retGroup;
-        FortRequest request = new FortRequest();
-        request.setContextId( this.contextId );
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity( group );
         if ( this.adminSess != null )
         {
@@ -74,8 +80,7 @@ public class GroupMgrRestImpl  extends Manageable implements GroupMgr
     {
         VUtil.assertNotNull( group, GlobalErrIds.GROUP_NULL, CLS_NM + ".update" );
         Group retGroup;
-        FortRequest request = new FortRequest();
-        request.setContextId( this.contextId );
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity( group );
         if ( this.adminSess != null )
         {
@@ -103,8 +108,7 @@ public class GroupMgrRestImpl  extends Manageable implements GroupMgr
     {
         VUtil.assertNotNull( group, GlobalErrIds.GROUP_NULL, CLS_NM + ".delete" );
         Group retGroup;
-        FortRequest request = new FortRequest();
-        request.setContextId( this.contextId );
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity( group );
         if ( this.adminSess != null )
         {
@@ -254,8 +258,7 @@ public class GroupMgrRestImpl  extends Manageable implements GroupMgr
         VUtil.assertNotNull( group, GlobalErrIds.GROUP_NULL, CLS_NM + ".assign" );
         VUtil.assertNotNull( member, GlobalErrIds.GROUP_MEMBER_NULL, CLS_NM + ".assign" );
         Group retGroup;
-        FortRequest request = new FortRequest();
-        request.setContextId( this.contextId );
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity( group );
         request.setValue( member );
         if ( this.adminSess != null )
@@ -285,8 +288,7 @@ public class GroupMgrRestImpl  extends Manageable implements GroupMgr
         VUtil.assertNotNull( group, GlobalErrIds.GROUP_NULL, CLS_NM + ".deassign" );
         VUtil.assertNotNull( member, GlobalErrIds.GROUP_MEMBER_NULL, CLS_NM + ".deassign" );
         Group retGroup;
-        FortRequest request = new FortRequest();
-        request.setContextId( this.contextId );
+        FortRequest request = RestUtils.getRequest( this.contextId );
         request.setEntity( group );
         request.setValue( member );
         if ( this.adminSess != null )

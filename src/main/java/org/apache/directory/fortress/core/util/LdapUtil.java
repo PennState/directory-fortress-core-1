@@ -17,7 +17,7 @@
  *   under the License.
  *
  */
-package org.apache.directory.fortress.core.ldap;
+package org.apache.directory.fortress.core.util;
 
 
 
@@ -36,7 +36,7 @@ public class LdapUtil
     private char[] ldapMetaChars;
     private String[] ldapReplVals;
 
-    private static volatile LdapUtil INSTANCE = null;
+    private static volatile LdapUtil sINSTANCE = null;
 
     /**
      * Provided synchronized access to this.
@@ -45,17 +45,17 @@ public class LdapUtil
      */
     public static LdapUtil getInstance()
     {
-        if ( INSTANCE == null )
+        if ( sINSTANCE == null )
         {
             synchronized ( LdapUtil.class )
             {
-                if ( INSTANCE == null )
+                if ( sINSTANCE == null )
                 {
-                    INSTANCE = new LdapUtil();
+                    sINSTANCE = new LdapUtil();
                 }
             }
         }
-        return INSTANCE;
+        return sINSTANCE;
     }
 
     /**
@@ -115,7 +115,7 @@ public class LdapUtil
      */
     public void setLdapMetaChars(char[] ldapMetaChars)
     {
-        this.ldapMetaChars = ldapMetaChars;
+        this.ldapMetaChars = ldapMetaChars.clone();
     }
 
     /**
@@ -135,6 +135,6 @@ public class LdapUtil
      */
     public void setLdapReplVals(String[] ldapReplVals)
     {
-        this.ldapReplVals = ldapReplVals;
+        this.ldapReplVals = ldapReplVals.clone();
     }
 }

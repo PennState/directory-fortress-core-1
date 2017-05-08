@@ -30,6 +30,7 @@ import org.apache.directory.fortress.core.GlobalIds;
 import org.apache.directory.fortress.core.SecurityException;
 import org.apache.directory.fortress.core.ValidationException;
 import org.apache.directory.fortress.core.model.*;
+import org.apache.directory.fortress.core.model.ConstraintUtil;
 import org.apache.directory.fortress.core.util.VUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +46,8 @@ final class GroupP
 {
     private static final String CLS_NM = GroupP.class.getName();
     private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
-    private GroupDAO gDao;
+    private GroupDAO gDao = new GroupDAO();
 
-    public GroupP(){
-    	gDao = new GroupDAO();
-    }
-    
     /**
      * Add a group node to the Directory Information Tree (DIT).
      *

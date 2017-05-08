@@ -108,6 +108,11 @@ public final class GlobalIds
      */
     public static final String GROUP_IMPLEMENTATION = "groupmgr.implementation";
 
+    /**
+     * When this optional tag, {@code propertyImplementation}, is placed in Fortress properties, its class name will be the default {@link PropertyMgr} instance used.
+     */
+    public static final String PROPERTY_IMPLEMENTATION = "propertymgr.implementation";
+    
     // AUTHENTICATION_TYPE
     /**
      * This property is used to specify if authentication is being performed within a security realm.
@@ -436,9 +441,9 @@ public final class GlobalIds
     public static final String ENABLE_LDAP_SSL_DEBUG = "enable.ldap.ssl.debug";
     public static final String TRUST_STORE = "trust.store";
     public static final String TRUST_STORE_PW = "trust.store.password";
+    public static final String TRUST_STORE_ON_CLASSPATH = "trust.store.onclasspath";
 
-
-    public static final String SET_TRUST_STORE_PROP = "trust.store.set.prop";
+    // coordinates to the LDAP server:
     public static final String LDAP_HOST = "host";
     public static final String LDAP_PORT = "port";
 

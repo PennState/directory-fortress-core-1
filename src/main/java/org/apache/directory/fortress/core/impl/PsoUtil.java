@@ -68,20 +68,23 @@ final class PsoUtil
     private static final String CLS_NM = PsoUtil.class.getName();
     private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
 
-    private static volatile PsoUtil INSTANCE = null; 
+    private static volatile PsoUtil sINSTANCE = null;
 
-    public static PsoUtil getInstance() {
-        if(INSTANCE == null) {
-            synchronized (PsoUtil.class) {
-                if(INSTANCE == null){
-        	        INSTANCE = new PsoUtil();
+    static PsoUtil getInstance()
+    {
+        if(sINSTANCE == null)
+        {
+            synchronized (PsoUtil.class)
+            {
+                if(sINSTANCE == null){
+        	        sINSTANCE = new PsoUtil();
                 }
             }
         }
-        return INSTANCE;
+        return sINSTANCE;
     }
     
-    public PsoUtil(){
+    private PsoUtil(){
         init();
     }
     
@@ -102,7 +105,7 @@ final class PsoUtil
      * Recursively traverse the {@link org.apache.directory.fortress.core.model.OrgUnit} graph and return all of the descendants of a given parent {@link org.apache.directory.fortress.core.model.OrgUnit#name}.
      *
      * @param name      {@link org.apache.directory.fortress.core.model.OrgUnit#name} maps on 'ftOrgUnit' object class.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return Set of names of descendants {@link org.apache.directory.fortress.core.model.OrgUnit}s of given parent.
      */
     Set<String> getDescendants( String name, String contextId )
@@ -115,7 +118,7 @@ final class PsoUtil
      * Recursively traverse the {@link org.apache.directory.fortress.core.model.OrgUnit.Type#USER} graph and return all of the ascendants of a given child ou.
      *
      * @param name      maps to logical {@link org.apache.directory.fortress.core.model.OrgUnit#name} on 'ftOrgUnit' object class.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return Set of ou names that are ascendants of given child.
      */
     Set<String> getAscendants( String name, String contextId )
@@ -128,7 +131,7 @@ final class PsoUtil
      * Traverse one level of the {@link org.apache.directory.fortress.core.model.OrgUnit} graph and return all of the children (direct descendants) of a given parent {@link org.apache.directory.fortress.core.model.OrgUnit#name}.
      *
      * @param name      {@link org.apache.directory.fortress.core.model.OrgUnit#name} maps on 'ftOrgUnit' object class.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return Set of names of children {@link org.apache.directory.fortress.core.model.OrgUnit}s of given parent.
      */
     public Set<String> getChildren( String name, String contextId )
@@ -141,7 +144,7 @@ final class PsoUtil
      * Traverse one level of the {@link org.apache.directory.fortress.core.model.OrgUnit.Type#USER} graph and return all of the parents (direct ascendants) of a given child ou.
      *
      * @param name      maps to logical {@link org.apache.directory.fortress.core.model.OrgUnit#name} on 'ftOrgUnit' object class.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return Set of ou names that are parents of given child.
      */
     Set<String> getParents( String name, String contextId )
@@ -154,7 +157,7 @@ final class PsoUtil
      * Recursively traverse the {@link org.apache.directory.fortress.core.model.OrgUnit.Type#PERM} graph and return number of children a given parent ou has.
      *
      * @param name      maps to logical {@link org.apache.directory.fortress.core.model.OrgUnit#name} on 'ftOrgUnit' object class.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return int value contains the number of children of a given parent ou.
      */
     int numChildren( String name, String contextId )
@@ -167,7 +170,7 @@ final class PsoUtil
      * Return Set of {@link org.apache.directory.fortress.core.model.OrgUnit#name}s ascendants contained within {@link org.apache.directory.fortress.core.model.OrgUnit.Type#PERM}.
      *
      * @param ous       contains list of {@link org.apache.directory.fortress.core.model.OrgUnit}s.
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return contains Set of all descendants.
      */
     Set<String> getInherited( List<OrgUnit> ous, String contextId )
@@ -220,7 +223,7 @@ final class PsoUtil
      * This api allows synchronized access to allow updates to hierarchical relationships.
      * Method will update the hierarchical data set and reload the JGraphT simple digraph with latest.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @param relationship contains parent-child relationship targeted for addition.
      * @param op   used to pass the ldap op {@link org.apache.directory.fortress.core.model.Hier.Op#ADD}, {@link org.apache.directory.fortress.core.model.Hier.Op#MOD}, {@link org.apache.directory.fortress.core.model.Hier.Op#REM}
      * @throws org.apache.directory.fortress.core.SecurityException in the event of a system error.
@@ -235,7 +238,7 @@ final class PsoUtil
      * Read this ldap record,{@code cn=Hierarchies, ou=OS-P} into this entity, {@link Hier}, before loading into this collection class,{@code org.jgrapht.graph.SimpleDirectedGraph}
      * using 3rd party lib, <a href="http://www.jgrapht.org/">JGraphT</a>.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return handle to simple digraph containing perm ou hierarchies.
      */
     private synchronized SimpleDirectedGraph<String, Relationship> loadGraph( String contextId )
@@ -268,7 +271,7 @@ final class PsoUtil
 
 
     /**
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return handle to simple digraph containing perm ou hierarchies.
      */
     private SimpleDirectedGraph<String, Relationship> getGraph( String contextId )
@@ -292,7 +295,7 @@ final class PsoUtil
 
     /**
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return key to this tenant's cache entry.
      */
     private static String getKey( String contextId )

@@ -175,7 +175,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
      * {@inheritDoc}
      */
     @Override
-    public void changePassword( User user, char[] newPassword ) throws SecurityException
+    public void changePassword( User user, String newPassword ) throws SecurityException
     {
         String methodName = "changePassword";
         assertContext( CLS_NM, methodName, user, GlobalErrIds.USER_NULL );
@@ -215,7 +215,7 @@ public final class AdminMgrImpl extends Manageable implements AdminMgr, Serializ
      * {@inheritDoc}
      */
     @Override
-    public void resetPassword( User user, char[] newPassword ) throws SecurityException
+    public void resetPassword( User user, String newPassword ) throws SecurityException
     {
         String methodName = "resetPassword";
         assertContext( CLS_NM, methodName, user, GlobalErrIds.USER_NULL );

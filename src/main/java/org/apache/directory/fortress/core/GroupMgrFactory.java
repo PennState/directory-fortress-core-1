@@ -20,7 +20,6 @@
 package org.apache.directory.fortress.core;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.directory.api.util.Strings;
 import org.apache.directory.fortress.core.impl.GroupMgrImpl;
 import org.apache.directory.fortress.core.model.Session;
 import org.apache.directory.fortress.core.rest.GroupMgrRestImpl;
@@ -39,7 +38,6 @@ import org.apache.directory.fortress.core.util.VUtil;
 public final class GroupMgrFactory
 {    
     private static final String CLS_NM = GroupMgrFactory.class.getName();
-    private static final String CREATE_INSTANCE_METHOD = CLS_NM + ".createInstance";
 
     /**
      * Prevent instantiation.
@@ -63,7 +61,7 @@ public final class GroupMgrFactory
     /**
      * Create and return a reference to {@link GroupMgr} object.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return instance of {@link GroupMgr}.
      * @throws org.apache.directory.fortress.core.SecurityException in the event of failure during instantiation.
      */
@@ -92,13 +90,6 @@ public final class GroupMgrFactory
             groupMgr = (GroupMgr) ClassUtil.createInstance( groupClassName );
         }
 
-        if(groupMgr instanceof GroupMgrImpl){
-            Config cfg = Config.getInstance();
-            if(!cfg.isRemoteConfigLoaded()){
-                cfg.loadRemoteConfig();
-            }
-        }
-
         groupMgr.setContextId(contextId);
         return groupMgr;
     }
@@ -119,7 +110,7 @@ public final class GroupMgrFactory
     /**
      * Create and return a reference to {@link GroupMgr} object.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @param adminSess contains a valid Fortress A/RBAC Session object.
      * @return instance of {@link org.apache.directory.fortress.core.AdminMgr}.
      * @throws SecurityException in the event of failure during instantiation.

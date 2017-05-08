@@ -34,7 +34,7 @@ enable.ldap.ssl=@ENABLE_LDAP_SSL@
 enable.ldap.ssl.debug=@ENABLE_LDAP_SSL_DEBUG@
 trust.store=@TRUST_STORE@
 trust.store.password=@TRUST_STORE_PW@
-trust.store.set.prop=@TRUST_STORE_SET_PROPW@
+trust.store.onclasspath=@TRUST_STORE_ONCLASSPATHW@
 
 # Used to enable STARTTLS on Connection to LDAP Server
 enable.ldap.starttls=false
@@ -108,3 +108,6 @@ GroupTest=org.apache.directory.fortress.core.group.GroupAntTest
 # Default behaviour when creating a user with no password is to set userPassword set to an empty string. 
 #The Fortress API will not allow auth binding if password is empty string or null, but enabling this property will cause the userPassword field to not be created. 
 #user.creation.field.password.disable=false
+
+#attribute to use for group properties
+group.properties=ftProps

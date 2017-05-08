@@ -19,7 +19,7 @@
 -------------------------------------------------------------------------------
 # README for Apache Fortress Core
 
- * Version 1.0.2-SNAPSHOT
+ * Version 2.0.0-RC2
  * Apache Fortress Core System Architecture Diagram
  ![Apache Fortress Core System Architecture](images/fortress-core-system-arch.png "Apache Fortress Core System Architecture")
 
@@ -54,10 +54,10 @@ ________________________________________________________________________________
 
  * If you see **FORTRESS_HOME**, refer to the package [root folder](.).
  * If you see **OPENLDAP_HOME**, refer to the root of OpenLDAP binary installation folder, e.g. /opt/etc/openldap
- * This package's Apache Maven [pom.xml](./pom.xml) and Apache Ant [build.xml](./build.xml) files are found in root folder.
- * Apache Ant is deprecated, but still used for some things.
-  * The configuration subsystem [README-CONFIG](./README-CONFIG.md) has more details.
- * Questions about this software package should be directed to its mailing list:
+ * This package uses Apache Maven to build and the [pom.xml](./pom.xml) is in the root folder.
+ * The configuration subsystem manages coordinates to the targeted ldap server and more.  Here's how it works [README-CONFIG](./README-CONFIG.md).
+ * This system runs within a multitenant context.  To learn how [README-MULTITENANCY](./README-MULTITENANCY.md).
+ * Questions about usage may be directed to the mailing list:
    * http://mail-archives.apache.org/mod_mbox/directory-fortress/
 
 -------------------------------------------------------------------------------
@@ -69,18 +69,24 @@ Minimum hardware requirements to run Apache Fortress and LDAP server:
 
 Minimum software requirements:
  * git
- * Java SDK 7++
+ * Java SDK 8
  * Apache Maven3++
 
 ___________________________________________________________________________________
 ## SECTION 2. Download & Install
 
-SNAPSHOTs from Apache GIT Software Repo:
+From Apache GIT Fortress-Core Software Repo:
 https://git-wip-us.apache.org/repos/asf?p=directory-fortress-core.git
 
-1. Clone the Apache Fortress Core Git Repo::
+1. Clone the SNAPSHOT:
  ```
  git clone https://git-wip-us.apache.org/repos/asf/directory-fortress-core.git
+ ```
+
+ * or by specific version, e.g. 2.0.0-RC2
+
+ ```
+  git clone --branch 2.0.0-RC2 https://git-wip-us.apache.org/repos/asf/directory-fortress-core.git
  ```
 
 2. Set Java and Maven home on machines.
@@ -336,6 +342,15 @@ ________________________________________________________________________________
  ```
  suffix.name=example
  suffix.dc=com
+ ```
+
+ * Optional - if a multi-level suffix needed, e.g. dc=foo, dc=example, dc=com.
+
+ ```
+  suffix.name=foo
+  suffix.dc=example
+  suffix.dc2=com
+  suffix=dc=${suffix.name},dc=${suffix.dc},dc=${suffix.dc2}
  ```
 
 5. Add to the file to enable LDAP connection pool parameters.

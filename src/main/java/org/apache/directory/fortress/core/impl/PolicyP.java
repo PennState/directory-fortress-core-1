@@ -63,7 +63,7 @@ final class PolicyP
     private static final int MAX_AGE = 157680000;
 
     // DAO class for ol pw policy data sets must be initialized before the other statics:
-    private PolicyDAO olDao;
+    private PolicyDAO olDao = new PolicyDAO();
     // this field is used to synchronize access to the above static data set:
     private static final ReadWriteLock policySetLock = new ReentrantReadWriteLock();
     // static field holds the list of names for all valid pw policies in effect:
@@ -77,8 +77,6 @@ final class PolicyP
 
     private void init()
     {
-    	olDao = new PolicyDAO();
-    	
         CacheMgr cacheMgr = CacheMgr.getInstance();
         PolicyP.policyCache = cacheMgr.getCache( FORTRESS_POLICIES );
     }
@@ -371,7 +369,7 @@ final class PolicyP
     /**
      * Load the cache with read only list of valid openldap policy names.
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return Set of unique names.
      */
     private Set<String> loadPolicySet( String contextId )
@@ -396,7 +394,7 @@ final class PolicyP
 
     /**
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return set containing list of policy names active.
      */
     private Set<String> getPolicySet( String contextId )
@@ -423,7 +421,7 @@ final class PolicyP
 
     /**
      *
-     * @param contextId maps to sub-tree in DIT, for example ou=contextId, dc=jts, dc = com.
+     * @param contextId maps to sub-tree in DIT, e.g. ou=contextId, dc=example, dc=com.
      * @return key for tenant's cache entry.
      */
     private static String getKey( String contextId )

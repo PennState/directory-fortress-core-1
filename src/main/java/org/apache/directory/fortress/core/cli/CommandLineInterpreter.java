@@ -42,7 +42,7 @@ import org.apache.directory.fortress.core.GroupMgrFactory;
 import org.apache.directory.fortress.core.model.Address;
 import org.apache.directory.fortress.core.model.PermObj;
 import org.apache.directory.fortress.core.model.Permission;
-import org.apache.directory.fortress.core.model.PropUtil;
+import org.apache.directory.fortress.core.util.PropUtil;
 import org.apache.directory.fortress.core.model.Role;
 import org.apache.directory.fortress.core.model.SDSet;
 import org.apache.directory.fortress.core.model.Session;
@@ -651,7 +651,7 @@ public class CommandLineInterpreter
                 command = CHANGE_PASSWORD;
                 LOG.info( command );
                 User user = options.getUser();
-                char[] newPassword = options.getNewPassword();
+                String newPassword = options.getNewPassword();
                 adminMgr.changePassword( user, newPassword );
             }
             else if ( commands.contains( RESET_PASSWORD ) )
@@ -659,7 +659,7 @@ public class CommandLineInterpreter
                 command = RESET_PASSWORD;
                 LOG.info( command );
                 User user = options.getUser();
-                char[] newPassword = options.getNewPassword();
+                String newPassword = options.getNewPassword();
                 adminMgr.resetPassword( user, newPassword );
             }
             else if ( commands.contains( LOCK_USER_ACCOUNT ) )
@@ -1473,6 +1473,7 @@ public class CommandLineInterpreter
             accessMgr = AccessMgrFactory.createInstance( contextId );
             accessMgr = AccessMgrFactory.createInstance( contextId );
             groupMgr = GroupMgrFactory.createInstance( contextId );
+            delAdminMgr = DelAdminMgrFactory.createInstance(contextId);
             //delReviewMgr = DelReviewMgrFactory.createInstance(contextId);
             //delAccessMgr = DelAccessMgrFactory.createInstance(contextId);
             //pwPolicyMgr = PwPolicyMgrFactory.createInstance(contextId);

@@ -43,7 +43,7 @@ import org.apache.directory.fortress.core.model.FortResponse;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.Props;
 import org.apache.directory.fortress.core.util.Config;
-import org.apache.directory.fortress.core.util.crypto.EncryptUtil;
+import org.apache.directory.fortress.core.util.EncryptUtil;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
@@ -67,77 +67,80 @@ import org.slf4j.LoggerFactory;
  *
  * @author <a href="mailto:dev@directory.apache.org">Apache Directory Project</a>
  */
-public class RestUtils
+public final class RestUtils
 {
     private static final String CLS_NM = RestUtils.class.getName();
     private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
-    private String HTTP_UID;
-    private static final String HTTP_PW_PARAM = "http.pw";
-    private String HTTP_PW;
-    private String HTTP_HOST;
-    private String HTTP_PORT;
-    private String HTTP_PROTOCOL;
-    private String VERSION;
-    private String SERVICE;
-    private String URI;
+    private static final String HTTP_PW_PROP = "http.pw";
     private static final int HTTP_OK = 200;
     private static final int HTTP_401_UNAUTHORIZED = 401;
     private static final int HTTP_403_FORBIDDEN = 403;
     private static final int HTTP_404_NOT_FOUND = 404;
     private static CachedJaxbContext cachedJaxbContext = new CachedJaxbContext();
 
+    // static member contains this
+    private static volatile RestUtils sINSTANCE = null;
+
     /**
      * Used to manage trust store properties.  If enabled, create SSL connection.
      *
      */
-    private String TRUST_STORE;
-    private String TRUST_STORE_PW;
-    private static String SET_TRUST_STORE_PROP = "trust.store.set.prop";
-    private boolean IS_SET_TRUST_STORE_PROP;
+    private String trustStore;
+    private String trustStorePw;
 
-    private static volatile RestUtils INSTANCE = null; 
+    // These members contain the http coordinates to a running fortress-rest instance:
+    private String httpUid, httpPw, httpHost, httpPort, httpProtocol, fortressRestVersion, serviceName, uri;
 
-    public static RestUtils getInstance() {
-        if(INSTANCE == null) {
-            synchronized (RestUtils.class) {
-                if(INSTANCE == null){
-        	        INSTANCE = new RestUtils();
+    /**
+     * create a new request and set its tenant id.
+     * @param szContextId contains the tenant id
+     * @return a brand new FortRequest
+     */
+    static FortRequest getRequest( String szContextId )
+    {
+        FortRequest request = new FortRequest();
+        request.setContextId(szContextId);
+        return request;
+    }
+
+    public static RestUtils getInstance()
+    {
+        if(sINSTANCE == null)
+        {
+            synchronized (RestUtils.class)
+            {
+                if(sINSTANCE == null)
+                {
+                    sINSTANCE = new RestUtils();
                 }
             }
         }
-        return INSTANCE;
+        return sINSTANCE;
     }
-    
+
     private void init()
     {
-        HTTP_UID = Config.getInstance().getProperty( "http.user" );
-        HTTP_PW = ( ( EncryptUtil.isEnabled() ) ? EncryptUtil.getInstance().decrypt( Config
-        		.getInstance().getProperty( HTTP_PW_PARAM ) ) : Config.getInstance().getProperty( HTTP_PW_PARAM ) );
-        HTTP_HOST = Config.getInstance().getProperty( "http.host" );
-        HTTP_PORT = Config.getInstance().getProperty( "http.port" );
-        HTTP_PROTOCOL = Config.getInstance().getProperty( "http.protocol", "http" );
-        TRUST_STORE = Config.getInstance().getProperty( "trust.store" );
-        TRUST_STORE_PW = Config.getInstance().getProperty( "trust.store.password" );
-        IS_SET_TRUST_STORE_PROP = (
-            Config.getInstance().getProperty( SET_TRUST_STORE_PROP ) != null &&
-            Config.getInstance().getProperty( SET_TRUST_STORE_PROP ).equalsIgnoreCase( "true" ) );
-        VERSION = System.getProperty( "version" );
-        SERVICE = "fortress-rest-" + VERSION;
-        URI = HTTP_PROTOCOL + "://" + HTTP_HOST + ":" + HTTP_PORT + "/" + SERVICE + "/";
-        
-        if ( IS_SET_TRUST_STORE_PROP )
-        {
-            LOG.info( "Set JSSE truststore properties:" );
-            LOG.info( "javax.net.ssl.trustStore: {}", TRUST_STORE );
-            System.setProperty( "javax.net.ssl.trustStore", TRUST_STORE );
-            System.setProperty( "javax.net.ssl.trustStorePassword", TRUST_STORE_PW );
-        }
+        httpUid = Config.getInstance().getProperty( "http.user" );
+        httpPw = ( ( EncryptUtil.isEnabled() ) ? EncryptUtil.getInstance().decrypt( Config
+            .getInstance().getProperty( HTTP_PW_PROP ) ) : Config.getInstance().getProperty( HTTP_PW_PROP ) );
+        httpHost = Config.getInstance().getProperty( "http.host" );
+        httpPort = Config.getInstance().getProperty( "http.port" );
+        httpProtocol = Config.getInstance().getProperty( "http.protocol", "http" );
+        trustStore = Config.getInstance().getProperty( "trust.store" );
+        trustStorePw = Config.getInstance().getProperty( "trust.store.password" );
+        fortressRestVersion = System.getProperty( "version" );
+        serviceName = "fortress-rest-" + fortressRestVersion;
+        uri = httpProtocol + "://" + httpHost + ":" + httpPort + "/" + serviceName + "/";
+        LOG.info( "Set JSSE truststore properties:" );
+        LOG.info( "javax.net.ssl.trustStore: {}", trustStore );
+        System.setProperty( "javax.net.ssl.trustStore", trustStore );
+        System.setProperty( "javax.net.ssl.trustStorePassword", trustStorePw );
     }
 
     private RestUtils(){
-    	init();
+        init();
     }
-    
+
     /**
      * Marshall the request into an XML String.
      *
@@ -215,7 +218,7 @@ public class RestUtils
     public String get( String userId, String password, String id, String id2, String id3, String function )
         throws RestException
     {
-        String url = URI + function + "/" + id;
+        String url = uri + function + "/" + id;
         if ( id2 != null )
         {
             url += "/" + id2;
@@ -228,7 +231,7 @@ public class RestUtils
         HttpGet get = new HttpGet(url);
         setMethodHeaders( get );
         return handleHttpMethod( get ,HttpClientBuilder.create()
-                .setDefaultCredentialsProvider(getCredentialProvider(userId, password)).build() );
+            .setDefaultCredentialsProvider(getCredentialProvider(userId, password)).build() );
     }
 
 
@@ -260,9 +263,9 @@ public class RestUtils
      */
     public String post( String userId, String password, String szInput, String function ) throws RestException
     {
-        LOG.debug( "post URI=[{}], function=[{}], request=[{}]", URI, function, szInput );
+        LOG.debug( "post uri=[{}], function=[{}], request=[{}]", uri, function, szInput );
         String szResponse = null;
-        HttpPost post = new HttpPost(URI + function);
+        HttpPost post = new HttpPost( uri + function);
         post.addHeader( "Accept", "text/xml" );
         setMethodHeaders( post );
         try
@@ -270,7 +273,7 @@ public class RestUtils
             HttpEntity entity = new StringEntity( szInput, ContentType.TEXT_XML );
             post.setEntity( entity );
             org.apache.http.client.HttpClient httpclient = HttpClientBuilder.create()
-                    .setDefaultCredentialsProvider(getCredentialProvider(userId, password)).build();
+                .setDefaultCredentialsProvider(getCredentialProvider(userId, password)).build();
             HttpResponse response = httpclient.execute( post );
             String error;
 
@@ -278,45 +281,45 @@ public class RestUtils
             {
                 case HTTP_OK :
                     szResponse = IOUtils.toString( response.getEntity().getContent(), "UTF-8" );
-                    LOG.debug( "post URI=[{}], function=[{}], response=[{}]", URI, function, szResponse );
+                    LOG.debug( "post uri=[{}], function=[{}], response=[{}]", uri, function, szResponse );
                     break;
                 case HTTP_401_UNAUTHORIZED :
-                    error = "post URI=[" + URI + "], function=[" + function
-                            + "], 401 function unauthorized on host";
+                    error = "post uri=[" + uri + "], function=[" + function
+                        + "], 401 function unauthorized on host";
                     LOG.error( error );
                     throw new RestException( GlobalErrIds.REST_UNAUTHORIZED_ERR, error );
                 case HTTP_403_FORBIDDEN :
-                    error = "post URI=[" + URI + "], function=[" + function
-                            + "], 403 function forbidden on host";
+                    error = "post uri=[" + uri + "], function=[" + function
+                        + "], 403 function forbidden on host";
                     LOG.error( error );
                     throw new RestException( GlobalErrIds.REST_FORBIDDEN_ERR, error );
                 case HTTP_404_NOT_FOUND :
-                    error = "post URI=[" + URI + "], function=[" + function + "], 404 not found from host";
+                    error = "post uri=[" + uri + "], function=[" + function + "], 404 not found from host";
                     LOG.error( error );
                     throw new RestException( GlobalErrIds.REST_NOT_FOUND_ERR, error );
                 default :
-                    error = "post URI=[" + URI + "], function=[" + function
-                            + "], error received from host: " + response.getStatusLine().getStatusCode();
+                    error = "post uri=[" + uri + "], function=[" + function
+                        + "], error received from host: " + response.getStatusLine().getStatusCode();
                     LOG.error( error );
                     throw new RestException( GlobalErrIds.REST_UNKNOWN_ERR, error );
             }
         }
         catch ( IOException ioe )
         {
-            String error = "post URI=[" + URI + "], function=[" + function + "] caught IOException=" + ioe;
+            String error = "post uri=[" + uri + "], function=[" + function + "] caught IOException=" + ioe;
             LOG.error( error );
             throw new RestException( GlobalErrIds.REST_IO_ERR, error, ioe );
         }
         catch ( WebApplicationException we )
         {
-            String error = "post URI=[" + URI + "], function=[" + function
-                    + "] caught WebApplicationException=" + we;
+            String error = "post uri=[" + uri + "], function=[" + function
+                + "] caught WebApplicationException=" + we;
             LOG.error( error );
             throw new RestException( GlobalErrIds.REST_WEB_ERR, error, we );
         }
         catch ( java.lang.NoSuchMethodError e )
         {
-            String error = "post URI=[" + URI + "], function=[" + function
+            String error = "post uri=[" + uri + "], function=[" + function
                 + "] caught Exception=" + e;
             LOG.error( error );
             e.printStackTrace();
@@ -346,8 +349,8 @@ public class RestUtils
 
     private CredentialsProvider getCredentialProvider(String uid, String password) {
         BasicCredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-        credentialsProvider.setCredentials( new AuthScope(HTTP_HOST,Integer.valueOf(HTTP_PORT)),
-                new UsernamePasswordCredentials(uid==null?HTTP_UID:uid,password==null?HTTP_PW:password) );
+        credentialsProvider.setCredentials( new AuthScope( httpHost,Integer.valueOf( httpPort )),
+            new UsernamePasswordCredentials(uid==null? httpUid :uid,password==null? httpPw :password) );
         return credentialsProvider;
     }
 

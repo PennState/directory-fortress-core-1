@@ -65,7 +65,7 @@ import org.apache.directory.fortress.core.model.AdminRole;
 import org.apache.directory.fortress.core.model.ConstraintUtil;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.OrgUnit;
-import org.apache.directory.fortress.core.model.PropUtil;
+import org.apache.directory.fortress.core.util.PropUtil;
 import org.apache.directory.fortress.core.model.PwMessage;
 import org.apache.directory.fortress.core.model.Role;
 import org.apache.directory.fortress.core.model.RoleConstraint;
@@ -151,265 +151,63 @@ import org.slf4j.LoggerFactory;
  */
 final class UserDAO extends LdapDataProvider
 {
-    private static final String CLS_NM = UserDAO.class.getName();
-    private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
-
     /*
       *  *************************************************************************
-      *  **  Fortress USER STATICS
+      *  **  USER DAO STATICS
       *  ************************************************************************
       */
+    private static final String CLS_NM = UserDAO.class.getName();
+    private static final Logger LOG = LoggerFactory.getLogger( CLS_NM );
     private static final String USERS_AUX_OBJECT_CLASS_NAME = "ftUserAttrs";
     private static final String USER_OBJECT_CLASS = "user.objectclass";
     private static final String USERS_EXTENSIBLE_OBJECT = "extensibleObject";
-    //private static final String POSIX_ACCOUNT_OBJECT_CLASS_NAME = "posixAccount";
-
-    // The Fortress User entity attributes are stored within standard LDAP object classes along with custom auxiliary
-    // object classes:
-    private String[] USER_OBJ_CLASS;
-
-    private String objectClassImpl;
     private static final String SYSTEM_USER = "ftSystem";
-
     /**
      * Constant contains the  attribute name used within inetorgperson ldap object classes.
      */
     private static final String DEPARTMENT_NUMBER = "departmentNumber";
-
     /**
      * Constant contains the  attribute name used within inetorgperson ldap object classes.
      */
     private static final String ROOM_NUMBER = "roomNumber";
-
     /**
      * Constant contains the mobile attribute values used within iNetOrgPerson ldap object classes.
      */
     private static final String MOBILE = "mobile";
-
     /**
      * Constant contains the  attribute name for jpeg images to be stored within inetorgperson ldap object classes.
      */
     private static final String JPEGPHOTO = "jpegPhoto";
-
     /**
      * Constant contains the employeeType attribute within iNetOrgPerson ldap object classes.
      */
     private static final String EMPLOYEE_TYPE = "employeeType";
-
-    // RFC2307bis:
-    private static final String UID_NUMBER = "uidNumber";
-    private static final String GID_NUMBER = "gidNumber";
-    private static final String HOME_DIRECTORY = "homeDirectory";
-    private static final String LOGIN_SHELL = "loginShell";
-    private static final String GECOS = "gecos";
-
     private static final String OPENLDAP_POLICY_SUBENTRY = "pwdPolicySubentry";
     private static final String OPENLDAP_PW_RESET = "pwdReset";
     private static final String OPENLDAP_PW_LOCKED_TIME = "pwdAccountLockedTime";
     private static final String OPENLDAP_ACCOUNT_LOCKED_TIME = "pwdAccountLockedTime";
     private static final String LOCK_VALUE = "000001010000Z";
-    private static final String[] USERID =
-        { SchemaConstants.UID_AT };
-    private static final String[] ROLES =
-        { GlobalIds.USER_ROLE_ASSIGN };
-
-    private static final String[] USERID_ATRS =
-        { SchemaConstants.UID_AT };
-
+    private static final String[] USERID = { SchemaConstants.UID_AT };
+    private static final String[] ROLES = { GlobalIds.USER_ROLE_ASSIGN };
+    private static final String[] USERID_ATRS = { SchemaConstants.UID_AT };
     // These will be loaded in static initializer that follows:
     private static String[] authnAtrs = null;
     private static String[] defaultAtrs = null;
+    private static final String[] ROLE_ATR = { GlobalIds.USER_ROLE_DATA };
+    private static final String[] AROLE_ATR = { GlobalIds.USER_ADMINROLE_DATA };
 
-    private void init()
-    {
-        objectClassImpl = Config.getInstance().getProperty( USER_OBJECT_CLASS );
-    	
-        USER_OBJ_CLASS = new String[]
-            { SchemaConstants.TOP_OC, Config.getInstance().getProperty( USER_OBJECT_CLASS ),
-                USERS_AUX_OBJECT_CLASS_NAME, GlobalIds.PROPS_AUX_OBJECT_CLASS_NAME, GlobalIds
-                .FT_MODIFIER_AUX_OBJECT_CLASS_NAME, USERS_EXTENSIBLE_OBJECT,
-            //            POSIX_ACCOUNT_OBJECT_CLASS_NAME
-        };
-    	
-        boolean isOpenldap = Config.getInstance().isOpenldap();
-        
-        LOG.debug( "GlobalIds.IS_OPENLDAP: " + isOpenldap );
-        LOG.debug( "GlobalIds.IS_OPENLDAP ? OPENLDAP_PW_RESET : null: " + ( isOpenldap ? OPENLDAP_PW_RESET
-            : null ) );
-        LOG.debug( "GlobalIds.IS_OPENLDAP: " + isOpenldap );
-
-        if ( isOpenldap )
-        {
-            // This default set of attributes contains all and is used for search operations.
-            defaultAtrs = new String[]
-                {
-                    GlobalIds.FT_IID,
-                    SchemaConstants.UID_AT,
-                    SchemaConstants.USER_PASSWORD_AT,
-                    SchemaConstants.DESCRIPTION_AT,
-                    SchemaConstants.OU_AT,
-                    SchemaConstants.CN_AT,
-                    SchemaConstants.SN_AT,
-                    GlobalIds.USER_ROLE_DATA,
-                    GlobalIds.CONSTRAINT,
-                    GlobalIds.USER_ROLE_ASSIGN,
-                    OPENLDAP_PW_RESET,
-                    OPENLDAP_PW_LOCKED_TIME,
-                    OPENLDAP_POLICY_SUBENTRY,
-                    GlobalIds.PROPS,
-                    GlobalIds.USER_ADMINROLE_ASSIGN,
-                    GlobalIds.USER_ADMINROLE_DATA,
-                    SchemaConstants.POSTAL_ADDRESS_AT,
-                    SchemaConstants.L_AT,
-                    SchemaConstants.POSTALCODE_AT,
-                    SchemaConstants.POSTOFFICEBOX_AT,
-                    SchemaConstants.ST_AT,
-                    SchemaConstants.PHYSICAL_DELIVERY_OFFICE_NAME_AT,
-                    DEPARTMENT_NUMBER,
-                    ROOM_NUMBER,
-                    SchemaConstants
-                    .TELEPHONE_NUMBER_AT,
-                    MOBILE,
-                    SchemaConstants.MAIL_AT,
-                    EMPLOYEE_TYPE,
-                    SchemaConstants.TITLE_AT,
-                    SYSTEM_USER,
-                    JPEGPHOTO,
-                /*
-                            TODO: add for RFC2307Bis
-                            UID_NUMBER,
-                            GID_NUMBER,
-                            HOME_DIRECTORY,
-                            LOGIN_SHELL,
-                            GECOS
-                */};
-
-            // This smaller result set of attributes are needed for user validation and authentication operations.
-            authnAtrs = new String[]
-                {
-                    GlobalIds.FT_IID,
-                    SchemaConstants.UID_AT,
-                    SchemaConstants.USER_PASSWORD_AT,
-                    SchemaConstants.DESCRIPTION_AT,
-                    SchemaConstants.OU_AT,
-                    SchemaConstants.CN_AT,
-                    SchemaConstants.SN_AT,
-                    GlobalIds.CONSTRAINT,
-                    OPENLDAP_PW_RESET,
-                    OPENLDAP_PW_LOCKED_TIME,
-                    GlobalIds.PROPS };
-        }
-
-        else
-        {
-            defaultAtrs = new String[]
-                {
-                    GlobalIds.FT_IID,
-                    SchemaConstants.UID_AT,
-                    SchemaConstants.USER_PASSWORD_AT,
-                    SchemaConstants.DESCRIPTION_AT,
-                    SchemaConstants.OU_AT,
-                    SchemaConstants.CN_AT,
-                    SchemaConstants.SN_AT,
-                    GlobalIds.USER_ROLE_DATA,
-                    GlobalIds.CONSTRAINT,
-                    GlobalIds.USER_ROLE_ASSIGN,
-                    GlobalIds.PROPS,
-                    GlobalIds.USER_ADMINROLE_ASSIGN,
-                    GlobalIds.USER_ADMINROLE_DATA,
-                    SchemaConstants.POSTAL_ADDRESS_AT,
-                    SchemaConstants.L_AT,
-                    SchemaConstants.POSTALCODE_AT,
-                    SchemaConstants.POSTOFFICEBOX_AT,
-                    SchemaConstants.ST_AT,
-                    SchemaConstants.PHYSICAL_DELIVERY_OFFICE_NAME_AT,
-                    DEPARTMENT_NUMBER,
-                    ROOM_NUMBER,
-                    SchemaConstants.TELEPHONE_NUMBER_AT,
-                    MOBILE,
-                    SchemaConstants.MAIL_AT,
-                    EMPLOYEE_TYPE,
-                    SchemaConstants.TITLE_AT,
-                    SYSTEM_USER,
-                    JPEGPHOTO, };
-
-            // This smaller result set of attributes are needed for user validation and authentication operations.
-            authnAtrs = new String[]
-                {
-                    GlobalIds.FT_IID,
-                    SchemaConstants.UID_AT,
-                    SchemaConstants.USER_PASSWORD_AT,
-                    SchemaConstants.DESCRIPTION_AT,
-                    SchemaConstants.OU_AT,
-                    SchemaConstants.CN_AT,
-                    SchemaConstants.SN_AT,
-                    GlobalIds.CONSTRAINT,
-                    GlobalIds.PROPS };
-        }
-
-    }
-
-    // This default set of attributes contains all and is used for search operations.
-    /*
-        private static final String[] defaultAtrs =
-            {
-                GlobalIds.FT_IID,
-                SchemaConstants.UID_AT, SchemaConstants.USER_PASSWORD_AT,
-                SchemaConstants.DESCRIPTION_AT,
-                SchemaConstants.OU_AT,
-                SchemaConstants.CN_AT,
-                SchemaConstants.SN_AT,
-                GlobalIds.USER_ROLE_DATA,
-                GlobalIds.CONSTRAINT,
-                GlobalIds.USER_ROLE_ASSIGN,
-                GlobalIds.IS_OPENLDAP ? OPENLDAP_PW_RESET : "",
-                GlobalIds.IS_OPENLDAP ? OPENLDAP_PW_LOCKED_TIME : "",
-                GlobalIds.IS_OPENLDAP ? OPENLDAP_POLICY_SUBENTRY : "",
-                GlobalIds.PROPS,
-                GlobalIds.USER_ADMINROLE_ASSIGN,
-                GlobalIds.USER_ADMINROLE_DATA,
-                SchemaConstants.POSTAL_ADDRESS_AT,
-                SchemaConstants.L_AT,
-                SchemaConstants.POSTALCODE_AT,
-                SchemaConstants.POSTOFFICEBOX_AT,
-                SchemaConstants.ST_AT,
-                SchemaConstants.PHYSICAL_DELIVERY_OFFICE_NAME_AT,
-                DEPARTMENT_NUMBER,
-                ROOM_NUMBER,
-                SchemaConstants.TELEPHONE_NUMBER_AT,
-                MOBILE,
-                SchemaConstants.MAIL_AT,
-                EMPLOYEE_TYPE,
-                SchemaConstants.TITLE_AT,
-                SYSTEM_USER,
-                JPEGPHOTO,
-
-    */
-    /*
-                TODO: add for RFC2307Bis
-                UID_NUMBER,
-                GID_NUMBER,
-                HOME_DIRECTORY,
-                LOGIN_SHELL,
-                GECOS
-    *//*
-
-        };
-      */
-
-    private static final String[] ROLE_ATR =
-        { GlobalIds.USER_ROLE_DATA };
-
-    private static final String[] AROLE_ATR =
-        { GlobalIds.USER_ADMINROLE_DATA };
-
-
-    public UserDAO() {
-        super();
-        init();
-	}
-    
     /**
+     * Default constructor is public
+     *
+     */
+    UserDAO()
+    {
+        initAttrArrays();
+	}
+
+    /**
+     * Add new user entity to LDAP
+     *
      * @param entity
      * @return
      * @throws CreateException
@@ -426,7 +224,8 @@ final class UserDAO extends LdapDataProvider
 
             Entry myEntry = new DefaultEntry( dn );
 
-            myEntry.add( SchemaConstants.OBJECT_CLASS_AT, USER_OBJ_CLASS );
+            myEntry.add( SchemaConstants.OBJECT_CLASS_AT, getUserObjectClass() );
+            //myEntry.add( SchemaConstants.OBJECT_CLASS_AT, USER_OBJ_CLASS );
             myEntry.add( GlobalIds.FT_IID, entity.getInternalId() );
             myEntry.add( SchemaConstants.UID_AT, entity.getUserId() );
 
@@ -446,13 +245,13 @@ final class UserDAO extends LdapDataProvider
 
             myEntry.add( SchemaConstants.SN_AT, entity.getSn() );
 
-            if( ArrayUtils.isNotEmpty( entity.getPassword() ))
+            if( StringUtils.isNotEmpty( entity.getPassword() ))
             {
-                myEntry.add( SchemaConstants.USER_PASSWORD_AT, new String( entity.getPassword() ) );
+                myEntry.add( SchemaConstants.USER_PASSWORD_AT, entity.getPassword() );
             }
             else if( !Config.getInstance().getBoolean( GlobalIds.USER_CREATION_PASSWORD_FIELD, false ) )
             {
-	            myEntry.add( SchemaConstants.USER_PASSWORD_AT, new String( new char[]{} ) );
+	            myEntry.add( SchemaConstants.USER_PASSWORD_AT, new String() );
             }
             
             myEntry.add( SchemaConstants.DISPLAY_NAME_AT, entity.getCn() );
@@ -466,34 +265,6 @@ final class UserDAO extends LdapDataProvider
             {
                 myEntry.add( EMPLOYEE_TYPE, entity.getEmployeeType() );
             }
-
-            /*
-                        TODO: add RFC2307BIS
-                        if ( StringUtils.isNotEmpty( entity.getUidNumber() ) )
-                        {
-                            myEntry.add( UID_NUMBER, entity.getUidNumber() );
-                        }
-
-                        if ( StringUtils.isNotEmpty( entity.getGidNumber() ) )
-                        {
-                            myEntry.add( GID_NUMBER, entity.getGidNumber() );
-                        }
-
-                        if ( StringUtils.isNotEmpty( entity.getHomeDirectory() ) )
-                        {
-                            myEntry.add( HOME_DIRECTORY, entity.getHomeDirectory() );
-                        }
-
-                        if ( StringUtils.isNotEmpty( entity.getLoginShell() ) )
-                        {
-                            myEntry.add( LOGIN_SHELL, entity.getLoginShell() );
-                        }
-
-                        if ( StringUtils.isNotEmpty( entity.getGecos() ) )
-                        {
-                            myEntry.add( GECOS, entity.getGecos() );
-                        }
-            */
 
             // These are multi-valued attributes, use the util function to load.
             // These items are optional.  The utility function will return quietly if item list is empty:
@@ -526,7 +297,7 @@ final class UserDAO extends LdapDataProvider
 
             // props are optional as well:
             // Add "initial" property here.
-            entity.addProperty( "init", "" );
+            entity.addProperty( "initAttrArrays", "" );
             loadProperties( entity.getProperties(), myEntry, GlobalIds.PROPS );
             // map the userid to the name field in constraint:
             entity.setName( entity.getUserId() );
@@ -588,10 +359,10 @@ final class UserDAO extends LdapDataProvider
                     entity.getOu() ) );
             }
 
-            if ( ArrayUtils.isNotEmpty( entity.getPassword() ) )
+            if ( StringUtils.isNotEmpty( entity.getPassword() ) )
             {
                 mods.add( new DefaultModification( ModificationOperation.REPLACE_ATTRIBUTE, SchemaConstants
-                    .USER_PASSWORD_AT, new String( entity.getPassword() ) ) );
+                    .USER_PASSWORD_AT, entity.getPassword() ) );
             }
 
             if ( StringUtils.isNotEmpty( entity.getDescription() ) )
@@ -1161,7 +932,7 @@ final class UserDAO extends LdapDataProvider
                 // place a wild card after the input userId:
                 String searchVal = encodeSafeText( user.getUserId(), GlobalIds.USERID_LEN );
                 filterbuf.append( GlobalIds.FILTER_PREFIX );
-                filterbuf.append( objectClassImpl );
+                filterbuf.append( Config.getInstance().getProperty( USER_OBJECT_CLASS ) );
                 filterbuf.append( ")(" );
                 filterbuf.append( SchemaConstants.UID_AT );
                 filterbuf.append( "=" );
@@ -1174,7 +945,7 @@ final class UserDAO extends LdapDataProvider
                 String searchVal = encodeSafeText( user.getInternalId(), GlobalIds.USERID_LEN );
                 // this is not a wildcard search. Must be exact match.
                 filterbuf.append( GlobalIds.FILTER_PREFIX );
-                filterbuf.append( objectClassImpl );
+                filterbuf.append( Config.getInstance().getProperty( USER_OBJECT_CLASS ) );
                 filterbuf.append( ")(" );
                 filterbuf.append( GlobalIds.FT_IID );
                 filterbuf.append( "=" );
@@ -1185,7 +956,7 @@ final class UserDAO extends LdapDataProvider
             {
                 // Beware - returns ALL users!!:"
                 filterbuf.append( "(objectclass=" );
-                filterbuf.append( objectClassImpl );
+                filterbuf.append( Config.getInstance().getProperty( USER_OBJECT_CLASS ) );
                 filterbuf.append( ")" );
             }
 
@@ -1235,7 +1006,7 @@ final class UserDAO extends LdapDataProvider
             String searchVal = encodeSafeText( user.getUserId(), GlobalIds.USERID_LEN );
             StringBuilder filterbuf = new StringBuilder();
             filterbuf.append( GlobalIds.FILTER_PREFIX );
-            filterbuf.append( objectClassImpl );
+            filterbuf.append( Config.getInstance().getProperty( USER_OBJECT_CLASS ) );
             filterbuf.append( ")(" );
             filterbuf.append( SchemaConstants.UID_AT );
             filterbuf.append( "=" );
@@ -1595,7 +1366,7 @@ final class UserDAO extends LdapDataProvider
             searchVal = encodeSafeText( searchVal, GlobalIds.USERID_LEN );
             StringBuilder filterbuf = new StringBuilder();
             filterbuf.append( GlobalIds.FILTER_PREFIX );
-            filterbuf.append( objectClassImpl );
+            filterbuf.append( Config.getInstance().getProperty( USER_OBJECT_CLASS ) );
             filterbuf.append( ")(" );
             filterbuf.append( SchemaConstants.UID_AT );
             filterbuf.append( "=" );
@@ -1647,7 +1418,7 @@ final class UserDAO extends LdapDataProvider
             String szOu = encodeSafeText( ou.getName(), GlobalIds.OU_LEN );
             StringBuilder filterbuf = new StringBuilder();
             filterbuf.append( GlobalIds.FILTER_PREFIX );
-            filterbuf.append( objectClassImpl );
+            filterbuf.append( Config.getInstance().getProperty( USER_OBJECT_CLASS ) );
             filterbuf.append( ")(" );
             filterbuf.append( SchemaConstants.OU_AT );
             filterbuf.append( "=" );
@@ -1701,7 +1472,7 @@ final class UserDAO extends LdapDataProvider
      * @throws SecurityException
      * @throws PasswordException
      */
-    boolean changePassword( User entity, char[] newPassword ) throws SecurityException
+    boolean changePassword( User entity, String newPassword ) throws SecurityException
     {
         boolean rc = true;
         LdapConnection ld = null;
@@ -1716,7 +1487,7 @@ final class UserDAO extends LdapDataProvider
             mods = new ArrayList<Modification>();
 
             mods.add( new DefaultModification( ModificationOperation.REPLACE_ATTRIBUTE, SchemaConstants
-                .USER_PASSWORD_AT, new String( newPassword ) ) );
+                .USER_PASSWORD_AT, newPassword ) );
 
             // This modify changes the password and checks password policies (if enabled)
             modify( ld, userDn, mods );
@@ -1773,7 +1544,7 @@ final class UserDAO extends LdapDataProvider
             List<Modification> mods = new ArrayList<Modification>();
 
             mods.add( new DefaultModification( ModificationOperation.REPLACE_ATTRIBUTE, SchemaConstants
-                .USER_PASSWORD_AT, new String( user.getPassword() ) ) );
+                .USER_PASSWORD_AT, user.getPassword() ) );
 
             mods.add( new DefaultModification( ModificationOperation.REPLACE_ATTRIBUTE, OPENLDAP_PW_RESET, "TRUE" ) );
 
@@ -2547,7 +2318,7 @@ final class UserDAO extends LdapDataProvider
             for ( String raw : roles )
             {
                 UserAdminRole ure = new ObjectFactory().createUserAdminRole();
-                ure.load( raw, contextId, new RoleUtil() );
+                ure.load( raw, contextId, RoleUtil.getInstance() );
                 ure.setSequenceId( sequence++ );
                 ure.setUserId( userId );
                 uRoles.add( ure );
@@ -2596,12 +2367,12 @@ final class UserDAO extends LdapDataProvider
             	//if already found, add to user role
             	if(uRoles.containsKey(roleName)){
             		UserRole ure = uRoles.get(roleName);
-            		ure.load( raw, contextId, new RoleUtil() );
+            		ure.load( raw, contextId, RoleUtil.getInstance() );
             	}
             	//else create new
             	else{            	
 	                UserRole ure = new ObjectFactory().createUserRole();
-	                ure.load( raw, contextId, new RoleUtil() );
+	                ure.load( raw, contextId, RoleUtil.getInstance() );
 	                ure.setUserId( userId );
 	                ure.setSequenceId( sequence++ );
 	                uRoles.put(roleName, ure );
@@ -2611,5 +2382,138 @@ final class UserDAO extends LdapDataProvider
 
         return new ArrayList<UserRole>(uRoles.values());
     }
-    
+
+
+    /**
+     * The Fortress User entity attributes are stored within standard LDAP object classes along with custom auxiliary
+     * object classes.
+     *
+     * @return String[] containing list of valid object classes.
+     */
+    private String[] getUserObjectClass()
+    {
+        String userObjectClass[] = new String[]
+            {
+                SchemaConstants.TOP_OC,
+                Config.getInstance().getProperty( USER_OBJECT_CLASS ),
+                USERS_AUX_OBJECT_CLASS_NAME,
+                GlobalIds.PROPS_AUX_OBJECT_CLASS_NAME,
+                GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME,
+                USERS_EXTENSIBLE_OBJECT
+            };
+        return userObjectClass;
+    }
+
+    private void initAttrArrays()
+    {
+        boolean isOpenldap = Config.getInstance().isOpenldap();
+        if ( isOpenldap )
+        {
+            // This default set of attributes contains all and is used for search operations.
+            defaultAtrs = new String[]
+                {
+                    GlobalIds.FT_IID,
+                    SchemaConstants.UID_AT,
+                    SchemaConstants.USER_PASSWORD_AT,
+                    SchemaConstants.DESCRIPTION_AT,
+                    SchemaConstants.OU_AT,
+                    SchemaConstants.CN_AT,
+                    SchemaConstants.SN_AT,
+                    GlobalIds.USER_ROLE_DATA,
+                    GlobalIds.CONSTRAINT,
+                    GlobalIds.USER_ROLE_ASSIGN,
+                    OPENLDAP_PW_RESET,
+                    OPENLDAP_PW_LOCKED_TIME,
+                    OPENLDAP_POLICY_SUBENTRY,
+                    GlobalIds.PROPS,
+                    GlobalIds.USER_ADMINROLE_ASSIGN,
+                    GlobalIds.USER_ADMINROLE_DATA,
+                    SchemaConstants.POSTAL_ADDRESS_AT,
+                    SchemaConstants.L_AT,
+                    SchemaConstants.POSTALCODE_AT,
+                    SchemaConstants.POSTOFFICEBOX_AT,
+                    SchemaConstants.ST_AT,
+                    SchemaConstants.PHYSICAL_DELIVERY_OFFICE_NAME_AT,
+                    DEPARTMENT_NUMBER,
+                    ROOM_NUMBER,
+                    SchemaConstants
+                        .TELEPHONE_NUMBER_AT,
+                    MOBILE,
+                    SchemaConstants.MAIL_AT,
+                    EMPLOYEE_TYPE,
+                    SchemaConstants.TITLE_AT,
+                    SYSTEM_USER,
+                    JPEGPHOTO,
+                /*
+                            TODO: add for RFC2307Bis
+                            UID_NUMBER,
+                            GID_NUMBER,
+                            HOME_DIRECTORY,
+                            LOGIN_SHELL,
+                            GECOS
+                */};
+
+            // This smaller result set of attributes are needed for user validation and authentication operations.
+            authnAtrs = new String[]
+                {
+                    GlobalIds.FT_IID,
+                    SchemaConstants.UID_AT,
+                    SchemaConstants.USER_PASSWORD_AT,
+                    SchemaConstants.DESCRIPTION_AT,
+                    SchemaConstants.OU_AT,
+                    SchemaConstants.CN_AT,
+                    SchemaConstants.SN_AT,
+                    GlobalIds.CONSTRAINT,
+                    OPENLDAP_PW_RESET,
+                    OPENLDAP_PW_LOCKED_TIME,
+                    GlobalIds.PROPS };
+        }
+
+        else
+        {
+            defaultAtrs = new String[]
+                {
+                    GlobalIds.FT_IID,
+                    SchemaConstants.UID_AT,
+                    SchemaConstants.USER_PASSWORD_AT,
+                    SchemaConstants.DESCRIPTION_AT,
+                    SchemaConstants.OU_AT,
+                    SchemaConstants.CN_AT,
+                    SchemaConstants.SN_AT,
+                    GlobalIds.USER_ROLE_DATA,
+                    GlobalIds.CONSTRAINT,
+                    GlobalIds.USER_ROLE_ASSIGN,
+                    GlobalIds.PROPS,
+                    GlobalIds.USER_ADMINROLE_ASSIGN,
+                    GlobalIds.USER_ADMINROLE_DATA,
+                    SchemaConstants.POSTAL_ADDRESS_AT,
+                    SchemaConstants.L_AT,
+                    SchemaConstants.POSTALCODE_AT,
+                    SchemaConstants.POSTOFFICEBOX_AT,
+                    SchemaConstants.ST_AT,
+                    SchemaConstants.PHYSICAL_DELIVERY_OFFICE_NAME_AT,
+                    DEPARTMENT_NUMBER,
+                    ROOM_NUMBER,
+                    SchemaConstants.TELEPHONE_NUMBER_AT,
+                    MOBILE,
+                    SchemaConstants.MAIL_AT,
+                    EMPLOYEE_TYPE,
+                    SchemaConstants.TITLE_AT,
+                    SYSTEM_USER,
+                    JPEGPHOTO, };
+
+            // This smaller result set of attributes are needed for user validation and authentication operations.
+            authnAtrs = new String[]
+                {
+                    GlobalIds.FT_IID,
+                    SchemaConstants.UID_AT,
+                    SchemaConstants.USER_PASSWORD_AT,
+                    SchemaConstants.DESCRIPTION_AT,
+                    SchemaConstants.OU_AT,
+                    SchemaConstants.CN_AT,
+                    SchemaConstants.SN_AT,
+                    GlobalIds.CONSTRAINT,
+                    GlobalIds.PROPS };
+        }
+    }
 }
