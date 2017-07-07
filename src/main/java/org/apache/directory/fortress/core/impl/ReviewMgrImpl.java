@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.directory.fortress.annotation.AdminPermissionOperation;
 import org.apache.directory.fortress.core.GlobalErrIds;
+import org.apache.directory.fortress.core.GlobalIds;
 import org.apache.directory.fortress.core.ReviewMgr;
 import org.apache.directory.fortress.core.SecurityException;
 import org.apache.directory.fortress.core.model.OrgUnit;
@@ -41,6 +42,7 @@ import org.apache.directory.fortress.core.model.RoleConstraint;
 import org.apache.directory.fortress.core.model.SDSet;
 import org.apache.directory.fortress.core.model.User;
 import org.apache.directory.fortress.core.model.UserRole;
+import org.apache.directory.fortress.core.util.Config;
 import org.apache.directory.fortress.core.util.VUtil;
 
 /**
@@ -325,22 +327,33 @@ public class ReviewMgrImpl extends Manageable implements ReviewMgr, Serializable
         String methodName = "assignedUsers";
         assertContext(CLS_NM, methodName, role, GlobalErrIds.ROLE_NULL);
         checkAccess(CLS_NM, methodName);
-        Role entity = roleP.read(role);
-        // this one retrieves from the role itself.
-        List<String> users = entity.getOccupants();
-        if (users != null && users.size() > limit)
+        List<String> users = null;
+
+        // If role occupant is set on role, get it from the role object itself:
+        if( Config.getInstance().isRoleOccupant() )
         {
-            users = users.subList(0, limit);
+            Role entity = roleP.read( role );
+            // this one retrieves from the role itself.
+            users = entity.getOccupants();
+            if ( users != null && users.size() > limit )
+            {
+                users = users.subList( 0, limit );
+            }
         }
+        // otherwise, search across the people tree for all users assigned to this role:
+        else
+        {
+            users = userP.getAssignedUserIds( role );
+        }
+
         // No users found for this role.
         // return empty list to caller:
-        else if (users == null)
+        if (users == null)
         {
             users = new ArrayList<>();
         }
+
         return users;
-        // this one does a search across all users:
-        //return userP.getAuthorizedUsers(role, limit);
     }
 
     /**
@@ -355,6 +368,20 @@ public class ReviewMgrImpl extends Manageable implements ReviewMgr, Serializable
         assertContext(CLS_NM, methodName, role, GlobalErrIds.ROLE_NULL);
         checkAccess(CLS_NM, methodName);
         return userP.getAssignedUsers(role);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @AdminPermissionOperation
+    public List<User> assignedUsers(Role role, RoleConstraint roleConstraint)
+        throws SecurityException
+    {
+        String methodName = "assignedUsers";
+        assertContext(CLS_NM, methodName, role, GlobalErrIds.ROLE_NULL);
+        checkAccess(CLS_NM, methodName);
+        return userP.getAssignedUsers(role, roleConstraint);
     }
 
     /**

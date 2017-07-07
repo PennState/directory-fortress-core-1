@@ -47,11 +47,13 @@ import org.apache.directory.fortress.core.UpdateException;
 import org.apache.directory.fortress.core.ldap.LdapDataProvider;
 import org.apache.directory.fortress.core.model.ObjectFactory;
 import org.apache.directory.fortress.core.model.PwPolicy;
+import org.apache.directory.fortress.core.model.User;
+import org.apache.directory.fortress.core.util.Config;
 import org.apache.directory.ldap.client.api.LdapConnection;
 
 
 /**
- * This DAO class maintains the OpenLDAP Password Policy entity which is a composite of the following structural and aux object classes:
+ * This DAO class maintains the LDAP Password Policy entity which is a composite of the following structural and aux object classes:
  * <h4>1. organizationalRole Structural Object Class is used to store basic attributes like cn and description</h4>
  * <ul>
  * <li>  ------------------------------------------
@@ -103,45 +105,55 @@ final class PolicyDAO extends LdapDataProvider
       *  ************************************************************************
       */
     private static final String OLPW_POLICY_EXTENSION = "2.5.4.35";
-    private static final String OLPW_POLICY_CLASS = "pwdPolicy";
+    private static final String PW_POLICY_EXTENSION = ( Config.getInstance().isOpenldap() ) ? OLPW_POLICY_EXTENSION : "userPassword";
+    private static final String ADS_BASE_CLASS = "ads-base";
+    private static final String PW_POLICY_CLASS = ( Config.getInstance().isOpenldap() ) ? "pwdPolicy" : "ads-passwordPolicy";
+
     /**
-     * This object class combines OpenLDAP PW Policy schema with the Fortress audit context.
+     * This object class combines PW Policy schema with the Fortress audit context.
      */
-    private static final String OAM_PWPOLICY_OBJ_CLASS[] =
+    private static String PWPOLICY_OBJ_CLASS[] = (Config.getInstance().isOpenldap())
+        ? new String[]
         {
             SchemaConstants.TOP_OC,
             SchemaConstants.DEVICE_OC,
-            OLPW_POLICY_CLASS,
+            PW_POLICY_CLASS,
             GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME
-    };
+        }
+        : new String[]
+        {
+            SchemaConstants.TOP_OC,
+            ADS_BASE_CLASS,
+            PW_POLICY_CLASS,
+            GlobalIds.FT_MODIFIER_AUX_OBJECT_CLASS_NAME
+        };
 
-    private static final String OLPW_ATTRIBUTE = "pwdAttribute";
-    private static final String OLPW_MIN_AGE = "pwdMinAge";
-    private static final String OLPW_MAX_AGE = "pwdMaxAge";
-    private static final String OLPW_IN_HISTORY = "pwdInHistory";
-    private static final String OLPW_CHECK_QUALITY = "pwdCheckQuality";
-    private static final String OLPW_MIN_LENGTH = "pwdMinLength";
-    private static final String OLPW_EXPIRE_WARNING = "pwdExpireWarning";
-    private static final String OLPW_GRACE_LOGIN_LIMIT = "pwdGraceAuthNLimit";
-    private static final String OLPW_LOCKOUT = "pwdLockout";
-    private static final String OLPW_LOCKOUT_DURATION = "pwdLockoutDuration";
-    private static final String OLPW_MAX_FAILURE = "pwdMaxFailure";
-    private static final String OLPW_FAILURE_COUNT_INTERVAL = "pwdFailureCountInterval";
-    private static final String OLPW_MUST_CHANGE = "pwdMustChange";
-    private static final String OLPW_ALLOW_USER_CHANGE = "pwdAllowUserChange";
-    private static final String OLPW_SAFE_MODIFY = "pwdSafeModify";
+    private static final String PW_PWD_ID = (Config.getInstance().isOpenldap()) ? "cn" : "ads-pwdid";
+    private static final String PW_MIN_AGE = (Config.getInstance().isOpenldap()) ? "pwdMinAge" : "ads-pwdMinAge";
+    private static final String PW_MAX_AGE = (Config.getInstance().isOpenldap()) ? "pwdMaxAge" : "ads-pwdMaxAge";
+    private static final String PW_IN_HISTORY = (Config.getInstance().isOpenldap()) ? "pwdInHistory" : "ads-pwdInHistory";
+    private static final String PW_CHECK_QUALITY = (Config.getInstance().isOpenldap()) ? "pwdCheckQuality" : "ads-pwdCheckQuality";
+    private static final String PW_MIN_LENGTH = (Config.getInstance().isOpenldap()) ? "pwdMinLength" : "ads-pwdMinLength";
+    private static final String PW_EXPIRE_WARNING = (Config.getInstance().isOpenldap()) ? "pwdExpireWarning" : "ads-pwdExpireWarning";
+    private static final String PW_GRACE_LOGIN_LIMIT = (Config.getInstance().isOpenldap()) ? "pwdGraceAuthNLimit" : "ads-pwdGraceAuthNLimit";
+    private static final String PW_LOCKOUT = (Config.getInstance().isOpenldap()) ? "pwdLockout" : "ads-pwdLockout";
+    private static final String PW_LOCKOUT_DURATION = (Config.getInstance().isOpenldap()) ? "pwdLockoutDuration" : "ads-pwdLockoutDuration";
+    private static final String PW_MAX_FAILURE = (Config.getInstance().isOpenldap()) ? "pwdMaxFailure" : "ads-pwdMaxFailure";
+    private static final String PW_FAILURE_COUNT_INTERVAL = (Config.getInstance().isOpenldap()) ? "pwdFailureCountInterval" : "ads-pwdFailureCountInterval";
+    private static final String PW_MUST_CHANGE = (Config.getInstance().isOpenldap()) ? "pwdMustChange" : "ads-pwdMustChange";
+    private static final String PW_ALLOW_USER_CHANGE = (Config.getInstance().isOpenldap()) ? "pwdAllowUserChange" : "ads-pwdAllowUserChange";
+    private static final String PW_SAFE_MODIFY = (Config.getInstance().isOpenldap()) ? "pwdSafeModify" : "ads-pwdSafeModify";
+    private static final String PW_ATTRIBUTE = (Config.getInstance().isOpenldap()) ? "pwdAttribute" : "ads-pwdAttribute";
+
     private static final String[] PASSWORD_POLICY_ATRS =
         {
-            SchemaConstants.CN_AT, OLPW_MIN_AGE, OLPW_MAX_AGE, OLPW_IN_HISTORY, OLPW_CHECK_QUALITY,
-            OLPW_MIN_LENGTH, OLPW_EXPIRE_WARNING, OLPW_GRACE_LOGIN_LIMIT, OLPW_LOCKOUT,
-            OLPW_LOCKOUT_DURATION, OLPW_MAX_FAILURE, OLPW_FAILURE_COUNT_INTERVAL,
-            OLPW_MUST_CHANGE, OLPW_ALLOW_USER_CHANGE, OLPW_SAFE_MODIFY,
-    };
+            PW_PWD_ID, PW_MIN_AGE, PW_MAX_AGE, PW_IN_HISTORY, PW_CHECK_QUALITY,
+            PW_MIN_LENGTH, PW_EXPIRE_WARNING, PW_GRACE_LOGIN_LIMIT, PW_LOCKOUT,
+            PW_LOCKOUT_DURATION, PW_MAX_FAILURE, PW_FAILURE_COUNT_INTERVAL,
+            PW_MUST_CHANGE, PW_ALLOW_USER_CHANGE, PW_SAFE_MODIFY
+        };
 
-    private static final String[] PASSWORD_POLICY_NAME_ATR =
-        {
-            SchemaConstants.CN_AT
-    };
+    private static final String[] PASSWORD_POLICY_NAME_ATR = { PW_PWD_ID };
 
     /**
      * @param entity
@@ -158,66 +170,67 @@ final class PolicyDAO extends LdapDataProvider
         try
         {
             Entry entry = new DefaultEntry( dn );
-            entry.add( SchemaConstants.OBJECT_CLASS_AT, OAM_PWPOLICY_OBJ_CLASS );
-            entry.add( SchemaConstants.CN_AT, entity.getName() );
-            entry.add( OLPW_ATTRIBUTE, OLPW_POLICY_EXTENSION );
+
+            entry.add( SchemaConstants.OBJECT_CLASS_AT, PWPOLICY_OBJ_CLASS );
+            entry.add( PW_PWD_ID, entity.getName() );
+            entry.add( PW_ATTRIBUTE, PW_POLICY_EXTENSION );
 
             if ( entity.getMinAge() != null )
             {
-                entry.add( OLPW_MIN_AGE, entity.getMinAge().toString() );
+                entry.add( PW_MIN_AGE, entity.getMinAge().toString() );
             }
 
             if ( entity.getMaxAge() != null )
             {
-                entry.add( OLPW_MAX_AGE, entity.getMaxAge().toString() );
+                entry.add( PW_MAX_AGE, entity.getMaxAge().toString() );
             }
 
             if ( entity.getInHistory() != null )
             {
-                entry.add( OLPW_IN_HISTORY, entity.getInHistory().toString() );
+                entry.add( PW_IN_HISTORY, entity.getInHistory().toString() );
             }
 
             if ( entity.getCheckQuality() != null )
             {
-                entry.add( OLPW_CHECK_QUALITY, entity.getCheckQuality().toString() );
+                entry.add( PW_CHECK_QUALITY, entity.getCheckQuality().toString() );
             }
 
             if ( entity.getMinLength() != null )
             {
-                entry.add( OLPW_MIN_LENGTH, entity.getMinLength().toString() );
+                entry.add( PW_MIN_LENGTH, entity.getMinLength().toString() );
             }
 
             if ( entity.getExpireWarning() != null )
             {
-                entry.add( OLPW_EXPIRE_WARNING, entity.getExpireWarning().toString() );
+                entry.add( PW_EXPIRE_WARNING, entity.getExpireWarning().toString() );
             }
 
             if ( entity.getGraceLoginLimit() != null )
             {
-                entry.add( OLPW_GRACE_LOGIN_LIMIT, entity.getGraceLoginLimit().toString() );
+                entry.add( PW_GRACE_LOGIN_LIMIT, entity.getGraceLoginLimit().toString() );
             }
 
             if ( entity.getLockout() != null )
             {
                 /**
-                 * For some reason OpenLDAP requires the pwdLockout boolean value to be upper case:
+                 * OpenLDAP requires the pwdLockout boolean value to be upper case:
                  */
-                entry.add( OLPW_LOCKOUT, entity.getLockout().toString().toUpperCase() );
+                entry.add( PW_LOCKOUT, entity.getLockout().toString().toUpperCase() );
             }
 
             if ( entity.getLockoutDuration() != null )
             {
-                entry.add( OLPW_LOCKOUT_DURATION, entity.getLockoutDuration().toString() );
+                entry.add( PW_LOCKOUT_DURATION, entity.getLockoutDuration().toString() );
             }
 
             if ( entity.getMaxFailure() != null )
             {
-                entry.add( OLPW_MAX_FAILURE, entity.getMaxFailure().toString() );
+                entry.add( PW_MAX_FAILURE, entity.getMaxFailure().toString() );
             }
 
             if ( entity.getFailureCountInterval() != null )
             {
-                entry.add( OLPW_FAILURE_COUNT_INTERVAL, entity.getFailureCountInterval().toString() );
+                entry.add( PW_FAILURE_COUNT_INTERVAL, entity.getFailureCountInterval().toString() );
             }
 
             if ( entity.getMustChange() != null )
@@ -225,7 +238,7 @@ final class PolicyDAO extends LdapDataProvider
                 /**
                  * OpenLDAP requires the boolean values to be upper case:
                  */
-                entry.add( OLPW_MUST_CHANGE, entity.getMustChange().toString().toUpperCase() );
+                entry.add( PW_MUST_CHANGE, entity.getMustChange().toString().toUpperCase() );
             }
 
             if ( entity.getAllowUserChange() != null )
@@ -233,16 +246,13 @@ final class PolicyDAO extends LdapDataProvider
                 /**
                  * OpenLDAP requires the boolean values to be upper case:
                  */
-                entry.add( OLPW_ALLOW_USER_CHANGE, entity.getAllowUserChange().toString()
-                    .toUpperCase() );
+                entry.add( PW_ALLOW_USER_CHANGE, entity.getAllowUserChange().toString()
+                        .toUpperCase() );
             }
 
             if ( entity.getSafeModify() != null )
             {
-                /**
-                 * OpenLDAP requires the boolean values to be upper case:
-                 */
-                entry.add( OLPW_SAFE_MODIFY, entity.getSafeModify().toString().toUpperCase() );
+                entry.add( PW_SAFE_MODIFY, entity.getSafeModify().toString().toUpperCase() );
             }
 
             ld = getAdminConnection();
@@ -280,49 +290,49 @@ final class PolicyDAO extends LdapDataProvider
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_MIN_AGE, entity.getMinAge().toString() ) );
+                    PW_MIN_AGE, entity.getMinAge().toString() ) );
             }
 
             if ( entity.getMaxAge() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_MAX_AGE, entity.getMaxAge().toString() ) );
+                    PW_MAX_AGE, entity.getMaxAge().toString() ) );
             }
 
             if ( entity.getInHistory() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_IN_HISTORY, entity.getInHistory().toString() ) );
+                    PW_IN_HISTORY, entity.getInHistory().toString() ) );
             }
 
             if ( entity.getCheckQuality() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_CHECK_QUALITY, entity.getCheckQuality().toString() ) );
+                    PW_CHECK_QUALITY, entity.getCheckQuality().toString() ) );
             }
 
             if ( entity.getMinLength() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_MIN_LENGTH, entity.getMinLength().toString() ) );
+                    PW_MIN_LENGTH, entity.getMinLength().toString() ) );
             }
 
             if ( entity.getExpireWarning() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_EXPIRE_WARNING, entity.getExpireWarning().toString() ) );
+                    PW_EXPIRE_WARNING, entity.getExpireWarning().toString() ) );
             }
 
             if ( entity.getGraceLoginLimit() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_GRACE_LOGIN_LIMIT, entity.getGraceLoginLimit().toString() ) );
+                    PW_GRACE_LOGIN_LIMIT, entity.getGraceLoginLimit().toString() ) );
             }
 
             if ( entity.getLockout() != null )
@@ -332,28 +342,28 @@ final class PolicyDAO extends LdapDataProvider
                  */
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_LOCKOUT, entity.getLockout().toString().toUpperCase() ) );
+                    PW_LOCKOUT, entity.getLockout().toString().toUpperCase() ) );
             }
 
             if ( entity.getLockoutDuration() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_LOCKOUT_DURATION, entity.getLockoutDuration().toString() ) );
+                    PW_LOCKOUT_DURATION, entity.getLockoutDuration().toString() ) );
             }
 
             if ( entity.getMaxFailure() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_MAX_FAILURE, entity.getMaxFailure().toString() ) );
+                    PW_MAX_FAILURE, entity.getMaxFailure().toString() ) );
             }
 
             if ( entity.getFailureCountInterval() != null )
             {
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_FAILURE_COUNT_INTERVAL, entity.getFailureCountInterval().toString() ) );
+                    PW_FAILURE_COUNT_INTERVAL, entity.getFailureCountInterval().toString() ) );
             }
 
             if ( entity.getMustChange() != null )
@@ -363,7 +373,7 @@ final class PolicyDAO extends LdapDataProvider
                  */
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_MUST_CHANGE, entity.getMustChange().toString().toUpperCase() ) );
+                    PW_MUST_CHANGE, entity.getMustChange().toString().toUpperCase() ) );
             }
 
             if ( entity.getAllowUserChange() != null )
@@ -373,7 +383,7 @@ final class PolicyDAO extends LdapDataProvider
                  */
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_ALLOW_USER_CHANGE, entity.getAllowUserChange().toString().toUpperCase() ) );
+                    PW_ALLOW_USER_CHANGE, entity.getAllowUserChange().toString().toUpperCase() ) );
             }
 
             if ( entity.getSafeModify() != null )
@@ -383,7 +393,7 @@ final class PolicyDAO extends LdapDataProvider
                  */
                 mods.add( new DefaultModification(
                     ModificationOperation.REPLACE_ATTRIBUTE,
-                    OLPW_SAFE_MODIFY, entity.getSafeModify().toString().toUpperCase() ) );
+                    PW_SAFE_MODIFY, entity.getSafeModify().toString().toUpperCase() ) );
             }
 
             if ( mods != null && mods.size() > 0 )
@@ -480,100 +490,90 @@ final class PolicyDAO extends LdapDataProvider
     {
         PwPolicy entity = new ObjectFactory().createPswdPolicy();
         entity.setSequenceId( sequence );
-        entity.setName( getAttribute( le, SchemaConstants.CN_AT ) );
-        String val = getAttribute( le, OLPW_MIN_AGE );
 
+        entity.setName( getAttribute( le, PW_PWD_ID ) );
+        String val;
+
+        val = getAttribute( le, PW_MIN_AGE );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setMinAge( Integer.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_MAX_AGE );
-
+        val = getAttribute( le, PW_MAX_AGE );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setMaxAge( Long.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_IN_HISTORY );
-
+        val = getAttribute( le, PW_IN_HISTORY );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setInHistory( Short.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_CHECK_QUALITY );
-
+        val = getAttribute( le, PW_CHECK_QUALITY );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setCheckQuality( Short.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_MIN_LENGTH );
-
+        val = getAttribute( le, PW_MIN_LENGTH );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setMinLength( Short.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_EXPIRE_WARNING );
-
+        val = getAttribute( le, PW_EXPIRE_WARNING );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setExpireWarning( Long.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_GRACE_LOGIN_LIMIT );
-
+        val = getAttribute( le, PW_GRACE_LOGIN_LIMIT );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setGraceLoginLimit( Short.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_LOCKOUT );
-
+        val = getAttribute( le, PW_LOCKOUT );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setLockout( Boolean.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_LOCKOUT_DURATION );
-
+        val = getAttribute( le, PW_LOCKOUT_DURATION );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setLockoutDuration( Integer.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_MAX_FAILURE );
-
+        val = getAttribute( le, PW_MAX_FAILURE );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setMaxFailure( Short.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_FAILURE_COUNT_INTERVAL );
-
+        val = getAttribute( le, PW_FAILURE_COUNT_INTERVAL );
         if ( StringUtils.isNotEmpty( val ) )
         {
-            entity.setFailureCountInterval( Short.valueOf( val ) );
+           entity.setFailureCountInterval( Short.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_MUST_CHANGE );
-
+        val = getAttribute( le, PW_MUST_CHANGE );
         if ( StringUtils.isNotEmpty( val ) )
         {
             //noinspection BooleanConstructorCall
             entity.setMustChange( Boolean.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_ALLOW_USER_CHANGE );
-
+        val = getAttribute( le, PW_ALLOW_USER_CHANGE );
         if ( StringUtils.isNotEmpty( val ) )
         {
             entity.setAllowUserChange( Boolean.valueOf( val ) );
         }
 
-        val = getAttribute( le, OLPW_SAFE_MODIFY );
+        val = getAttribute( le, PW_SAFE_MODIFY );
 
         if ( StringUtils.isNotEmpty( val ) )
         {
@@ -600,11 +600,10 @@ final class PolicyDAO extends LdapDataProvider
         try
         {
             searchVal = encodeSafeText( policy.getName(), GlobalIds.PWPOLICY_NAME_LEN );
-            String filter = GlobalIds.FILTER_PREFIX + OLPW_POLICY_CLASS + ")("
-                + GlobalIds.POLICY_NODE_TYPE + "=" + searchVal + "*))";
+            String szFilter = GlobalIds.FILTER_PREFIX + PW_POLICY_CLASS + ")(" + PW_PWD_ID + "=" + searchVal + "*))";
             ld = getAdminConnection();
             SearchCursor searchResults = search( ld, policyRoot,
-                SearchScope.ONELEVEL, filter, PASSWORD_POLICY_ATRS, false, GlobalIds.BATCH_SIZE );
+                SearchScope.ONELEVEL, szFilter, PASSWORD_POLICY_ATRS, false, GlobalIds.BATCH_SIZE );
             long sequence = 0;
 
             while ( searchResults.next() )
@@ -644,14 +643,15 @@ final class PolicyDAO extends LdapDataProvider
 
         try
         {
-            String filter = "(objectclass=" + OLPW_POLICY_CLASS + ")";
+            String szFilter = "(objectclass=" + PW_POLICY_CLASS + ")";
             ld = getAdminConnection();
             SearchCursor searchResults = search( ld, policyRoot,
-                SearchScope.ONELEVEL, filter, PASSWORD_POLICY_NAME_ATR, false, GlobalIds.BATCH_SIZE );
+                SearchScope.ONELEVEL, szFilter, PASSWORD_POLICY_NAME_ATR, false, GlobalIds.BATCH_SIZE );
 
             while ( searchResults.next() )
             {
-                policySet.add( getAttribute( searchResults.getEntry(), SchemaConstants.CN_AT ) );
+                Entry entry = searchResults.getEntry();
+                policySet.add( getAttribute( entry, PW_PWD_ID ) );
             }
         }
         catch ( LdapException e )
@@ -672,15 +672,27 @@ final class PolicyDAO extends LdapDataProvider
         return policySet;
     }
 
-
     private String getDn( PwPolicy policy )
     {
-        return GlobalIds.POLICY_NODE_TYPE + "=" + policy.getName() + "," + getPolicyRoot( policy.getContextId() );
+        return PW_PWD_ID + "=" + policy.getName() + "," + getPolicyRoot( policy.getContextId() );
     }
 
-
-    private String getPolicyRoot( String contextId )
+    // Allow callers from package {@link UserDAO} access to this method to resolve the pwdAttribute dn.
+    static String getPolicyDn( User user )
     {
-        return getRootDn( contextId, GlobalIds.PPOLICY_ROOT );
+        return PW_PWD_ID + "=" + user.getPwPolicy() + "," + getPolicyRoot( user.getContextId() );
+    }
+
+    private static String getPolicyRoot( String contextId )
+    {
+        String szDn;
+
+        // ApacheDS requires pw policy objects to be stored under ou=config node;
+        if( Config.getInstance().isOpenldap() )
+            szDn = getRootDn( contextId, GlobalIds.PPOLICY_ROOT );
+        else
+            szDn = getRootDn( contextId, GlobalIds.ADS_PPOLICY_ROOT );
+
+        return szDn;
     }
 }

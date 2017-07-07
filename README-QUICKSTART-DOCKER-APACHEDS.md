@@ -16,21 +16,21 @@
    specific language governing permissions and limitations
    under the License.
 
-# OpenLDAP & Fortress QUICKSTART on DOCKER
+# APACHEDS & Fortress QUICKSTART on DOCKER
 
 -------------------------------------------------------------------------------
 ## Table of Contents
 
  * Document Overview
  * SECTION 1. Prerequisites
- * SECTION 2. Apache Fortress Core Setup using OpenLDAP Docker Image
+ * SECTION 2. Apache Fortress Core Setup using APACHEDS Docker Image
  * SECTION 3. Apache Fortress Core Integration Test
  * SECTION 4. Docker Commands
 ___________________________________________________________________________________
 ## Document Overview
 
- * This document contains instructions to install Apache Fortress Core using OpenLDAP Docker image.
- * It uses [openldap-for-apache-fortress-tests](src/docker/openldap-for-apache-fortress-tests/Dockerfile)
+ * This document contains instructions to install Apache Fortress Core using APACHEDS Docker image.
+ * It uses [apacheds-for-apache-fortress-tests](src/docker/apacheds-for-apache-fortress-tests/Dockerfile)
 
 -------------------------------------------------------------------------------
 ## SECTION 1. Prerequisites
@@ -59,37 +59,36 @@ ________________________________________________________________________________
 2. Now build the apache directory fortress docker image (trailing dot matters):
 
  ```
- docker build -t apachedirectory/openldap-for-apache-fortress-tests -f src/docker/openldap-for-apache-fortress-tests/Dockerfile .
+ docker build -t apachedirectory/apacheds-for-apache-fortress-tests -f src/docker/apacheds-for-apache-fortress-tests/Dockerfile .
  ```
 
 Or just pull the prebuilt image:
 
  ```
- docker pull apachedirectory/openldap-for-apache-fortress-tests
+ docker pull apachedirectory/apacheds-for-apache-fortress-tests
  ```
 
 3. Run the docker container:
 
  ```
- CONTAINER_ID=$(docker run -d -P apachedirectory/openldap-for-apache-fortress-tests)
- CONTAINER_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "389/tcp") 0).HostPort}}' $CONTAINER_ID)
+ CONTAINER_ID=$(docker run -d -P apachedirectory/apacheds-for-apache-fortress-tests)
+ CONTAINER_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "10389/tcp") 0).HostPort}}' $CONTAINER_ID)
  echo $CONTAINER_PORT
  ```
 
  *note: make note of the port as it's needed later
  *depending on your docker setup may need to run as root or sudo priv's.
 
-4. Prepare fortress to use the slapd running inside docker container:
+4. Prepare fortress to use the apacheds running inside docker container:
 
  ```
  cp build.properties.example build.properties
- cp slapd.properties.example slapd.properties
  ```
 
-5. Edit the *slapd.properties* file:
+5. Edit the *build.properties* file:
 
  ```
- vi slapd.properties
+ vi build.properties
  ```
 
 6. Update the *ldap.port* prop:
@@ -114,6 +113,7 @@ Or just pull the prebuilt image:
  ```
  mvn clean install
  ```
+
 ___________________________________________________________________________________
 ## SECTION 3. Apache Fortress Core Integration Test
 
@@ -137,11 +137,10 @@ ________________________________________________________________________________
 3. Verify the tests worked:
 
  ```
- Tests run: 126, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 196 sec - in org.apache.directory.fortress.core.impl.FortressJUnitTest
-
+ Tests run: 122, Failures: 0, Errors: 0, Skipped: 0
  Results :
 
- Tests run: 126, Failures: 0, Errors: 0, Skipped: 0
+ Tests run: 122, Failures: 0, Errors: 0, Skipped: 0
 
  [INFO]
  [INFO] --- maven-antrun-plugin:1.8:run (default) @ fortress-core ---
@@ -151,11 +150,6 @@ ________________________________________________________________________________
  [INFO] Executed tasks
  [INFO] ------------------------------------------------------------------------
  [INFO] BUILD SUCCESS
- [INFO] ------------------------------------------------------------------------
- [INFO] Total time: 03:19 min
- [INFO] Finished at: 2016-01-07T09:28:18-06:00
- [INFO] Final Memory: 27M/532M
- [INFO] ------------------------------------------------------------------------
  ```
 
 4. Rerun the tests to verify teardown APIs work:
@@ -167,11 +161,9 @@ ________________________________________________________________________________
 5. Verify that worked also:
 
  ```
- Tests run: 158, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 207.081 sec - in org.apache.directory.fortress.core.impl.FortressJUnitTest
-
  Results :
 
- Tests run: 158, Failures: 0, Errors: 0, Skipped: 0
+ Tests run: 154, Failures: 0, Errors: 0, Skipped: 0
 
  [INFO]
  [INFO] --- maven-antrun-plugin:1.8:run (default) @ fortress-core ---
@@ -182,15 +174,11 @@ ________________________________________________________________________________
  [INFO] ------------------------------------------------------------------------
  [INFO] BUILD SUCCESS
  [INFO] ------------------------------------------------------------------------
- [INFO] Total time: 03:30 min
- [INFO] Finished at: 2016-01-07T09:33:11-06:00
- [INFO] Final Memory: 27M/531M
- [INFO] ------------------------------------------------------------------------
  ```
- Notice 141 tests ran this time vs 113 the first time.
+ Notice 154 tests ran this time vs 122 the first time.
 
  Test Notes:
-  * If tests complete without errors Apache Fortress works with your OpenLDAP server.
+  * If tests complete without errors Apache Fortress works with your ApacheDS server (in Docker).
   * These tests load thousands of objects into the target ldap server.
   * Warning messages are negative tests in action.
 
@@ -204,10 +192,12 @@ ________________________________________________________________________________
 ___________________________________________________________________________________
 ## SECTION 4. Docker Commands
 
+Here are some common commands needed to manage the Docker image.
+
 #### Build image
 
  ```
- docker build -t apachedirectory/openldap-for-apache-fortress-tests -f src/docker/openldap-for-apache-fortress-tests/Dockerfile .
+ docker build -t apachedirectory/apacheds-for-apache-fortress-tests -f src/docker/apacheds-for-apache-fortress-tests/Dockerfile .
  ```
 
  * trailing dot matters
@@ -215,14 +205,14 @@ ________________________________________________________________________________
 Or just to be sure don't use cached layers:
 
  ```
- docker build  --no-cache=true -t apachedirectory/openldap-for-apache-fortress-tests -f src/docker/openldap-for-apache-fortress-tests/Dockerfile .
+ docker build   --no-cache=true -t apachedirectory/apacheds-for-apache-fortress-tests -f src/docker/apacheds-for-apache-fortress-tests/Dockerfile .
  ```
 
 #### Run container
 
  ```
- CONTAINER_ID=$(docker run -d -P apachedirectory/openldap-for-apache-fortress-tests)
- CONTAINER_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "389/tcp") 0).HostPort}}' $CONTAINER_ID)
+ CONTAINER_ID=$(docker run -d -P apachedirectory/apacheds-for-apache-fortress-tests)
+ CONTAINER_PORT=$(docker inspect --format='{{(index (index .NetworkSettings.Ports "10389/tcp") 0).HostPort}}' $CONTAINER_ID)
  echo $CONTAINER_PORT
  ```
 
@@ -246,4 +236,4 @@ Or just to be sure don't use cached layers:
  ```
 
 ____________________________________________________________________________________
-#### END OF README-QUICKSTART-DOCKER-SLAPD
+#### END OF README-QUICKSTART-DOCKER-APACHEDS
