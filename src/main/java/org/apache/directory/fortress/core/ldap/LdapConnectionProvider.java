@@ -129,6 +129,8 @@ public class LdapConnectionProvider
         boolean testWhileIdle = Config.getInstance().getBoolean( GlobalIds.LDAP_ADMIN_POOL_TEST_IDLE, true );
         boolean logTestWhileIdle = Config.getInstance().getBoolean( GlobalIds.LDAP_LOG_POOL_TEST_IDLE, true );
 
+        int connectionPoolTimeout = Config.getInstance().getInt( GlobalIds.LDAP_CONNECTION_TIMEOUT_MILLIS );
+        
         int timeBetweenEvictionRunMillis = Config.getInstance().getInt( GlobalIds.LDAP_ADMIN_POOL_EVICT_RUN_MILLIS, 1000 * 60 * 30 );
         int logTimeBetweenEvictionRunMillis = Config.getInstance().getInt( GlobalIds.LDAP_LOG_POOL_EVICT_RUN_MILLIS, 1000 * 60 * 30 );
 
@@ -138,7 +140,10 @@ public class LdapConnectionProvider
         config.setLdapHost( host );
         config.setLdapPort( port );
         config.setName( Config.getInstance().getProperty( GlobalIds.LDAP_ADMIN_POOL_UID, "" ) );
-
+        if(connectionPoolTimeout != 0) {
+            config.setTimeout( connectionPoolTimeout );
+        }
+        
         config.setUseSsl( IS_SSL );
         //config.setTrustManagers( new NoVerificationTrustManager() );
 
