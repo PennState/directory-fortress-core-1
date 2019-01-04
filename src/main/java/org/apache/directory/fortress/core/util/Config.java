@@ -58,6 +58,7 @@ public final class Config
     private static final String USER_PROP_FILE = "fortress.user.properties";
     private static final String EXT_LDAP_HOST = "fortress.host";
     private static final String EXT_LDAP_PORT = "fortress.port";
+    private static final String EXT_LDAP_CONNECTION_TIMEOUT = "fortress.ldap.conn.timeout.millis";
     private static final String EXT_LDAP_ADMIN_POOL_UID = "fortress.admin.user";
     private static final String EXT_LDAP_ADMIN_POOL_PW = "fortress.admin.pw";
     private static final String EXT_LDAP_ADMIN_POOL_MIN = "fortress.min.admin.conn";
@@ -559,6 +560,13 @@ public final class Config
         {
             config.setProperty( GlobalIds.LDAP_PORT, szValue );
             LOG.info( PREFIX, GlobalIds.LDAP_PORT, szValue );
+        }
+        // Check to see if the ldap connection timeout has been overridden by a system property:
+        szValue = System.getProperty( EXT_LDAP_CONNECTION_TIMEOUT );
+        if( StringUtils.isNotEmpty( szValue ))
+        {
+            config.setProperty( GlobalIds.LDAP_CONNECTION_TIMEOUT_MILLIS, szValue );
+            LOG.info( PREFIX, GlobalIds.LDAP_CONNECTION_TIMEOUT_MILLIS, szValue );
         }
 
         // Check to see if the admin pool uid has been overridden by a system property:

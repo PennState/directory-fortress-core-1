@@ -506,6 +506,8 @@ public final class GlobalIds
     // coordinates to the LDAP server:
     public static final String LDAP_HOST = "host";
     public static final String LDAP_PORT = "port";
+    public static final String LDAP_CONNECTION_TIMEOUT_MILLIS = "ldap.conn.timeout.millis";
+
 
     /**
      * maximum number of entries allowed for ldap filter replacements.
